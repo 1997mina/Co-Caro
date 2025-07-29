@@ -1,4 +1,4 @@
-class GameLogic:
+class BoardLogic:
     def __init__(self, width, height, win_length=5):
         """
         Khởi tạo logic game.

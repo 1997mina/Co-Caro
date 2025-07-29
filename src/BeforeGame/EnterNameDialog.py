@@ -24,8 +24,10 @@ def get_player_names(screen):
 
     # Tải và thay đổi kích thước hình ảnh X và O
     img_size = 50
-    x_img = pygame.transform.scale(pygame.image.load('img/X.png'), (img_size, img_size))
-    o_img = pygame.transform.scale(pygame.image.load('img/O.png'), (img_size, img_size))
+    x_img_raw = pygame.image.load('img/X.png').convert_alpha()
+    o_img_raw = pygame.image.load('img/O.png').convert_alpha()
+    x_img = pygame.transform.scale(x_img_raw, (img_size, img_size))
+    o_img = pygame.transform.scale(o_img_raw, (img_size, img_size))
 
     # Các ô nhập liệu và nhãn
     input_box_width = 500
@@ -53,8 +55,7 @@ def get_player_names(screen):
     while game_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+                return None # Trả về None để báo hiệu người dùng muốn thoát
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box1.collidepoint(event.pos):

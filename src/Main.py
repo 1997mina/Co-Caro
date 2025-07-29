@@ -1,37 +1,50 @@
 import pygame
 
+from sys import exit
 from BeforeGame.EnterNameDialog import get_player_names
 from EndGame import show_end_screen
 from InGame.BoardLogic import BoardLogic
-from InGame.GameBoard import GameBoard
+from InGame.MainScreen import GameBoard
 
 if __name__ == '__main__':
     pygame.init()
 
     # Screen dimensions
-    screen_width = 800
-    screen_height = 600
+    screen_width = 1000
+    screen_height = 800
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Cờ Caro")
 
     # --- Màn hình nhập tên ---
-    player1_name, player2_name = get_player_names(screen)
+    player_data = get_player_names(screen)
+    if player_data is None:
+        pygame.quit()
+        exit()
+    player1_name, player2_name = player_data
+    player_names = {'X': player1_name, 'O': player2_name}
 
-    # Board dimensions
+    # Game dimensions
+    # Tính toán kích thước để đảm bảo các ô cờ vừa khít và không có khoảng trống
     cell_size = 40
-    board_width = screen_width // cell_size
-    board_height = screen_height // cell_size
-    board = GameBoard(board_width, board_height, cell_size)
+    board_height_cells = screen_height // cell_size
+
+    # Tính toán chiều rộng thực tế của panel và bàn cờ.
+    # Panel sẽ có chiều rộng TỐI THIỂU là 250px, phần dư từ phép chia ô cờ
+    # sẽ được thêm vào panel để lấp đầy màn hình.
+    board_width_cells = (screen_width - 250) // cell_size
+    panel_actual_width = screen_width - (board_width_cells * cell_size)
+
+    # Khởi tạo bàn cờ và logic game
+    board = GameBoard(board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names)
 
     # Khởi tạo logic game
     WIN_LENGTH = 5
-    game_logic = BoardLogic(board_width, board_height, WIN_LENGTH)
+    game_logic = BoardLogic(board_width_cells, board_height_cells, WIN_LENGTH)
 
     # Các biến trạng thái game
     current_player = 'X'
     game_over = False
     winner = None
-    player_names = {'X': player1_name, 'O': player2_name}
 
     running = True
     while running:
@@ -42,25 +55,28 @@ if __name__ == '__main__':
             # Chỉ xử lý click chuột khi game chưa kết thúc
             if not game_over and event.type == pygame.MOUSEBUTTONDOWN:
                 mouseX, mouseY = event.pos
-                clicked_row = mouseY // cell_size
-                clicked_col = mouseX // cell_size
 
-                # Nếu ô hợp lệ và còn trống, đánh dấu và đổi lượt
-                if board.mark_square(clicked_row, clicked_col, current_player):
-                    # Kiểm tra thắng
-                    if game_logic.check_win(board.board, current_player, clicked_row, clicked_col):
-                        winner = current_player
-                        game_over = True
-                    # Kiểm tra hòa
-                    elif game_logic.is_board_full(board.board):
-                        winner = "Draw"
-                        game_over = True
-                    else:
-                        # Đổi lượt chơi
-                        current_player = 'O' if current_player == 'X' else 'X'
+                # Chỉ xử lý click nếu nó nằm trong khu vực bàn cờ
+                if mouseX >= panel_actual_width:
+                    clicked_row = mouseY // cell_size
+                    # Bù trừ cho độ rộng của panel khi tính cột
+                    clicked_col = (mouseX - panel_actual_width) // cell_size
+
+                    if board.mark_square(clicked_row, clicked_col, current_player):
+                        # Kiểm tra thắng
+                        if game_logic.check_win(board.board, current_player, clicked_row, clicked_col):
+                            winner = current_player
+                            game_over = True
+                        # Kiểm tra hòa
+                        elif game_logic.is_board_full(board.board):
+                            winner = "Draw"
+                            game_over = True
+                        else:
+                            # Nếu game chưa kết thúc, đổi lượt chơi
+                            current_player = 'O' if current_player == 'X' else 'X'
 
         screen.fill((255, 255, 255))  # Fill background white
-        board.draw(screen)
+        board.draw(screen, current_player)
 
         # Hiển thị thông báo khi game kết thúc
         if game_over:

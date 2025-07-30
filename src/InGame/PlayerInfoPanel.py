@@ -16,14 +16,17 @@ class PlayerInfoPanel:
         # Fonts
         self.font_name = pygame.font.SysFont("Times New Roman", 28, bold=True)
         self.font_turn = pygame.font.SysFont("Times New Roman", 22, italic=True)
+        self.font_timer = pygame.font.SysFont("Times New Roman", 24, bold=True)
         
         # Colors
         self.bg_color = (240, 240, 240)
         self.text_color = (30, 30, 30)
         self.highlight_color = (200, 255, 200) # Màu xanh lá cây nhạt
         self.divider_color = (200, 200, 200)
+        self.timer_color = (60, 60, 60)
+        self.timer_warning_color = (211, 47, 47) # Màu đỏ cảnh báo
 
-    def draw(self, screen, current_player):
+    def draw(self, screen, current_player, remaining_time):
         # Vẽ nền panel
         pygame.draw.rect(screen, self.bg_color, self.rect)
         
@@ -44,7 +47,13 @@ class PlayerInfoPanel:
         screen.blit(self.x_img, self.x_img.get_rect(centerx=self.rect.centerx, y=p1_area.y + 60))
         if current_player == 'X':
             turn_surf_p1 = self.font_turn.render("Lượt của bạn!", True, self.text_color)
-            screen.blit(turn_surf_p1, turn_surf_p1.get_rect(centerx=self.rect.centerx, y=p1_area.y + 125))
+            screen.blit(turn_surf_p1, turn_surf_p1.get_rect(centerx=self.rect.centerx, y=p1_area.y + 120))
+
+            # Vẽ bộ đếm thời gian
+            timer_text = f"Thời gian: {max(0, int(remaining_time))}s"
+            timer_color = self.timer_warning_color if remaining_time < 6 else self.timer_color
+            timer_surf = self.font_timer.render(timer_text, True, timer_color)
+            screen.blit(timer_surf, timer_surf.get_rect(centerx=self.rect.centerx, y=p1_area.y + 150))
 
         # --- Vẽ đường phân cách ---
         pygame.draw.line(screen, self.divider_color, (self.rect.x + 20, divider_y), (self.rect.right - 20, divider_y), 2)
@@ -60,4 +69,10 @@ class PlayerInfoPanel:
         screen.blit(self.o_img, self.o_img.get_rect(centerx=self.rect.centerx, y=p2_area.y + 60))
         if current_player == 'O':
             turn_surf_p2 = self.font_turn.render("Lượt của bạn!", True, self.text_color)
-            screen.blit(turn_surf_p2, turn_surf_p2.get_rect(centerx=self.rect.centerx, y=p2_area.y + 125))
+            screen.blit(turn_surf_p2, turn_surf_p2.get_rect(centerx=self.rect.centerx, y=p2_area.y + 120))
+
+            # Vẽ bộ đếm thời gian
+            timer_text = f"Thời gian: {max(0, int(remaining_time))}s"
+            timer_color = self.timer_warning_color if remaining_time < 6 else self.timer_color
+            timer_surf = self.font_timer.render(timer_text, True, timer_color)
+            screen.blit(timer_surf, timer_surf.get_rect(centerx=self.rect.centerx, y=p2_area.y + 150))

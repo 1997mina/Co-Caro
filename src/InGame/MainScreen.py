@@ -39,10 +39,10 @@ class GameBoard:
         """Xóa toàn bộ bàn cờ để bắt đầu ván mới."""
         self.board = [['' for _ in range(self.board_width_cells)] for _ in range(self.board_height_cells)]
 
-    def draw(self, screen, current_player):
+    def draw(self, screen, current_player, remaining_time):
         """Vẽ bàn cờ và các quân cờ X, O."""
         # Vẽ PlayerInfoPanel
-        self.player_info_panel.draw(screen, current_player)
+        self.player_info_panel.draw(screen, current_player, remaining_time)
 
         # Vẽ bàn cờ (dịch sang phải panel_width)
         board_offset_x = self.player_info_panel.rect.width

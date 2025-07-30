@@ -2,8 +2,9 @@ import pygame
 
 from sys import exit
 from BeforeGame.EnterNameDialog import get_player_names
-from EndGame import show_end_screen
+from InGame.EndScreen import show_end_screen
 from InGame.BoardLogic import BoardLogic
+from InGame.TimerLogic import TurnTimer
 from InGame.MainScreen import GameBoard
 
 if __name__ == '__main__':
@@ -46,8 +47,22 @@ if __name__ == '__main__':
     game_over = False
     winner = None
 
+    # --- Khởi tạo bộ đếm thời gian ---
+    timer = TurnTimer(time_limit_seconds=20)
+    timer.start_turn()
+
     running = True
     while running:
+        # --- Tính toán thời gian còn lại ---
+        remaining_time = timer.get_remaining_time()
+        if not game_over:
+            if timer.is_time_up():
+                # Hết giờ, tự động đổi lượt
+                current_player = 'O' if current_player == 'X' else 'X'
+                timer.start_turn()
+        else:
+            remaining_time = timer.time_limit  # Không cần đếm khi game kết thúc
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -55,7 +70,6 @@ if __name__ == '__main__':
             # Chỉ xử lý click chuột khi game chưa kết thúc
             if not game_over and event.type == pygame.MOUSEBUTTONDOWN:
                 mouseX, mouseY = event.pos
-
                 # Chỉ xử lý click nếu nó nằm trong khu vực bàn cờ
                 if mouseX >= panel_actual_width:
                     clicked_row = mouseY // cell_size
@@ -74,9 +88,12 @@ if __name__ == '__main__':
                         else:
                             # Nếu game chưa kết thúc, đổi lượt chơi
                             current_player = 'O' if current_player == 'X' else 'X'
-
+                        
+                        # Reset bộ đếm thời gian cho lượt mới sau khi đi
+                        timer.start_turn()
+        
         screen.fill((255, 255, 255))  # Fill background white
-        board.draw(screen, current_player)
+        board.draw(screen, current_player, remaining_time)
 
         # Hiển thị thông báo khi game kết thúc
         if game_over:
@@ -94,6 +111,7 @@ if __name__ == '__main__':
                 game_over = False
                 winner = None
                 current_player = 'X'
+                timer.start_turn() # Reset timer cho game mới
             else:
                 running = False # Thoát khỏi vòng lặp game
 

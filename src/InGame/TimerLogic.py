@@ -3,11 +3,13 @@ import pygame
 class TurnTimer:
     """
     Lớp quản lý bộ đếm thời gian cho mỗi lượt đi.
+    Hỗ trợ cả chế độ đếm thời gian theo lượt và tổng thời gian.
     """
-    def __init__(self, time_limit_seconds):
+    def __init__(self, time_limit_seconds, mode="turn_based"):
         """
         Khởi tạo bộ đếm với giới hạn thời gian cho mỗi lượt.
         :param time_limit_seconds: Giới hạn thời gian (tính bằng giây).
+        :param mode: Chế độ chơi ("turn_based" hoặc "total_time").
         """
         self.time_limit = time_limit_seconds
         self.start_ticks = 0
@@ -31,4 +33,3 @@ class TurnTimer:
         :return: True nếu hết giờ, False nếu còn thời gian.
         """
         return self.get_remaining_time() <= 0
-

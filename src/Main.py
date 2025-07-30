@@ -1,7 +1,7 @@
 import pygame
 
 from sys import exit
-from BeforeGame.EnterNameDialog import get_player_names
+from BeforeGame.TwoPlayerSetting import get_player_names
 from InGame.EndScreen import show_end_screen
 from InGame.BoardLogic import BoardLogic
 from InGame.TimerLogic import TurnTimer
@@ -21,9 +21,9 @@ if __name__ == '__main__':
     if player_data is None:
         pygame.quit()
         exit()
-    player1_name, player2_name = player_data
+    player1_name, player2_name, time_limit = player_data
     player_names = {'X': player1_name, 'O': player2_name}
-
+    
     # Game dimensions
     # Tính toán kích thước để đảm bảo các ô cờ vừa khít và không có khoảng trống
     cell_size = 40
@@ -46,22 +46,21 @@ if __name__ == '__main__':
     current_player = 'X'
     game_over = False
     winner = None
+    winning_cells = [] # Lưu tọa độ các ô thắng
 
     # --- Khởi tạo bộ đếm thời gian ---
-    timer = TurnTimer(time_limit_seconds=20)
+    timer = TurnTimer(time_limit_seconds=time_limit)
     timer.start_turn()
 
     running = True
     while running:
         # --- Tính toán thời gian còn lại ---
-        remaining_time = timer.get_remaining_time()
         if not game_over:
+            remaining_time = timer.get_remaining_time()
             if timer.is_time_up():
-                # Hết giờ, tự động đổi lượt
-                current_player = 'O' if current_player == 'X' else 'X'
-                timer.start_turn()
-        else:
-            remaining_time = timer.time_limit  # Không cần đếm khi game kết thúc
+                # Hết giờ, người chơi hiện tại bị xử thua.
+                game_over = True
+                winner = 'O' if current_player == 'X' else 'X'
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -78,9 +77,11 @@ if __name__ == '__main__':
 
                     if board.mark_square(clicked_row, clicked_col, current_player):
                         # Kiểm tra thắng
-                        if game_logic.check_win(board.board, current_player, clicked_row, clicked_col):
+                        winning_line = game_logic.check_win(board.board, current_player, clicked_row, clicked_col)
+                        if winning_line:
                             winner = current_player
                             game_over = True
+                            winning_cells = winning_line
                         # Kiểm tra hòa
                         elif game_logic.is_board_full(board.board):
                             winner = "Draw"
@@ -93,7 +94,7 @@ if __name__ == '__main__':
                         timer.start_turn()
         
         screen.fill((255, 255, 255))  # Fill background white
-        board.draw(screen, current_player, remaining_time)
+        board.draw(screen, current_player, remaining_time, winning_cells)
 
         # Hiển thị thông báo khi game kết thúc
         if game_over:
@@ -111,6 +112,7 @@ if __name__ == '__main__':
                 game_over = False
                 winner = None
                 current_player = 'X'
+                winning_cells = [] # Xóa các ô thắng của ván trước
                 timer.start_turn() # Reset timer cho game mới
             else:
                 running = False # Thoát khỏi vòng lặp game

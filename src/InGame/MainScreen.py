@@ -1,5 +1,6 @@
 import pygame
 import os
+
 from InGame.PlayerInfoPanel import PlayerInfoPanel
 
 class GameBoard:
@@ -39,7 +40,7 @@ class GameBoard:
         """Xóa toàn bộ bàn cờ để bắt đầu ván mới."""
         self.board = [['' for _ in range(self.board_width_cells)] for _ in range(self.board_height_cells)]
 
-    def draw(self, screen, current_player, remaining_time):
+    def draw(self, screen, current_player, remaining_time, winning_cells=None):
         """Vẽ bàn cờ và các quân cờ X, O."""
         # Vẽ PlayerInfoPanel
         self.player_info_panel.draw(screen, current_player, remaining_time)
@@ -61,3 +62,15 @@ class GameBoard:
                     screen.blit(self.x_img_scaled, (img_pos_x, img_pos_y))
                 elif player == 'O':
                     screen.blit(self.o_img_scaled, (img_pos_x, img_pos_y))
+
+        # Vẽ highlight cho các ô thắng cuộc
+        if winning_cells:
+            # Tạo một surface bán trong suốt để vẽ highlight
+            highlight_surface = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
+            highlight_surface.fill((255, 255, 0, 100))  # Màu vàng, 100/255 độ trong suốt
+
+            for r, c in winning_cells:
+                rect = pygame.Rect(board_offset_x + c * self.cell_size, r * self.cell_size, self.cell_size, self.cell_size)
+                screen.blit(highlight_surface, rect.topleft)
+
+            pygame.time.wait(1000) # Tạm dừng 1 giây trước khi hiển thị màn hình kết thúc

@@ -9,8 +9,10 @@ INPUT_BOX_COLOR_INACTIVE = (200, 200, 200)
 INPUT_BOX_COLOR_ACTIVE = (100, 100, 100)
 BUTTON_COLOR = (0, 150, 136)
 DRAG_COLOR = (150, 150, 150)
-DRAG_HIGHLIGHT_COLOR = (100, 100, 100)
+DRAG_HIGHLIGHT_COLOR = (100, 100, 100) # Màu highlight khi kéo vào ô thả
 BUTTON_TEXT_COLOR = (255, 255, 255)
+MODE_BUTTON_COLOR_INACTIVE = (220, 220, 220)
+MODE_BUTTON_COLOR_ACTIVE = (0, 150, 136)
 
 def get_player_names(screen):
     """
@@ -21,6 +23,7 @@ def get_player_names(screen):
     font_label = pygame.font.SysFont("Times New Roman", 36)
     font_input = pygame.font.SysFont("Times New Roman", 32)
     font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)
+    font_mode = pygame.font.SysFont("Times New Roman", 28)
 
     # Tải và thay đổi kích thước hình ảnh X và O
     img_size = 50
@@ -32,7 +35,7 @@ def get_player_names(screen):
     # Các ô nhập liệu và nhãn
     input_box_width = 500
     input_box1 = pygame.Rect((screen_width - input_box_width) / 2, 80, input_box_width, 50)
-    input_box2 = pygame.Rect((screen_width - input_box_width) / 2, 200, input_box_width, 50)
+    input_box2 = pygame.Rect((screen_width - input_box_width) / 2, 150, input_box_width, 50)
     player1_name = ""
     player2_name = ""
     active_box = None  # Có thể là 1 hoặc 2, hoặc None
@@ -48,8 +51,23 @@ def get_player_names(screen):
     # Khởi tạo trình xử lý kéo thả quân cờ
     drag_handler = PieceDragHandler(x_img, o_img, x_drag_rect_initial_center, o_drag_rect_initial_center, drop_target1, drop_target2)
 
+    # Các chế độ chơi
+    modes = {
+        "turn_based": {"name": "30 giây mỗi lượt", "time_limit": 30},
+        "total_time": {"name": "3 phút tổng cộng", "time_limit": 180}
+    }
+    selected_mode = "turn_based" # Chế độ mặc định
+
+    # --- Các nút chọn chế độ (Radio button) ---
+    radio_button_y_start = 550
+    radio_button_spacing = 40
+    radio_button_radius = 15
+    # Khu vực có thể click cho radio button (bao gồm cả nút tròn và chữ)
+    radio_turn_based_rect = pygame.Rect(screen_width / 2 - 150, radio_button_y_start - radio_button_radius, 300, radio_button_radius * 2)
+    radio_total_time_rect = pygame.Rect(screen_width / 2 - 150, radio_button_y_start + radio_button_spacing - radio_button_radius, 300, radio_button_radius * 2)
+
     # Nút Bắt đầu
-    start_button = pygame.Rect(screen_width / 2 - 100, 480, 200, 60)
+    start_button = pygame.Rect(screen_width / 2 - 100, 700, 200, 60)
     
     game_running = True
     while game_running:
@@ -62,9 +80,19 @@ def get_player_names(screen):
                     active_box = 1
                 elif input_box2.collidepoint(event.pos):
                     active_box = 2
+                elif radio_turn_based_rect.collidepoint(event.pos):
+                    selected_mode = "turn_based"
+                elif radio_total_time_rect.collidepoint(event.pos):
+                    selected_mode = "total_time"
                 elif start_button.collidepoint(event.pos):
                     # Chỉ bắt đầu khi cả hai người chơi đã nhập tên và đã chọn quân cờ
                     if player1_name.strip() and player2_name.strip() and drag_handler.player1_piece and drag_handler.player2_piece:
+                        # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
+                        if drag_handler.player1_piece == 'X':
+                            return player1_name.strip(), player2_name.strip(), modes[selected_mode]["time_limit"]
+                        elif drag_handler.player1_piece == 'O':
+                            return player2_name.strip(), player1_name.strip(), modes[selected_mode]["time_limit"]
+
                         game_running = False
                 else:
                     active_box = None
@@ -77,6 +105,7 @@ def get_player_names(screen):
 
             if event.type == pygame.MOUSEBUTTONUP:
                 drag_handler.handle_mouse_up(event.pos)
+
 
             if event.type == pygame.KEYDOWN:
                 if active_box == 1:
@@ -94,14 +123,14 @@ def get_player_names(screen):
         screen.fill(BG_COLOR)
 
         # Nhập tên người chơi 1
-        label1_surf = font_label.render("Người chơi 1:", True, TEXT_COLOR)
-        screen.blit(label1_surf, label1_surf.get_rect(midbottom=input_box1.midtop, y=input_box1.top - 50))
+        label1_surf = font_label.render("Người chơi 1:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
+        screen.blit(label1_surf, (input_box1.x - label1_surf.get_width() - 20, input_box1.y + (input_box1.height - label1_surf.get_height()) / 2))
         pygame.draw.rect(screen, INPUT_BOX_COLOR_ACTIVE if active_box == 1 else INPUT_BOX_COLOR_INACTIVE, input_box1, 2)
         screen.blit(font_input.render(player1_name, True, TEXT_COLOR), (input_box1.x + 10, input_box1.y + 10))
 
         # Nhập tên người chơi 2
-        label2_surf = font_label.render("Người chơi 2:", True, TEXT_COLOR)
-        screen.blit(label2_surf, label2_surf.get_rect(midbottom=input_box2.midtop, y=input_box2.top - 50))
+        label2_surf = font_label.render("Người chơi 2:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
+        screen.blit(label2_surf, (input_box2.x - label2_surf.get_width() - 20, input_box2.y + (input_box2.height - label2_surf.get_height()) / 2))
         pygame.draw.rect(screen, INPUT_BOX_COLOR_ACTIVE if active_box == 2 else INPUT_BOX_COLOR_INACTIVE, input_box2, 2)
         screen.blit(font_input.render(player2_name, True, TEXT_COLOR), (input_box2.x + 10, input_box2.y + 10))
 
@@ -131,21 +160,40 @@ def get_player_names(screen):
         drag_instruction_surf = font_label.render("Kéo X hoặc O vào ô nhỏ để chọn quân cờ", True, TEXT_COLOR)
         screen.blit(drag_instruction_surf, drag_instruction_surf.get_rect(center=(screen_width / 2, 320)))
 
+        # Vẽ lựa chọn chế độ chơi
+        mode_label_surf = font_label.render("Chọn chế độ chơi:", True, TEXT_COLOR)
+        screen.blit(mode_label_surf, mode_label_surf.get_rect(center=(screen_width / 2, 500)))
+
+        # --- Vẽ Radio Buttons ---
+        radio_y1 = radio_turn_based_rect.centery
+        radio_y2 = radio_total_time_rect.centery
+        # Căn chỉnh vị trí X của vòng tròn và văn bản
+        radio_x = radio_turn_based_rect.x + radio_button_radius
+        text_x_offset = radio_button_radius + 10
+
+        # Lựa chọn 1: "30 giây mỗi lượt"
+        pygame.draw.circle(screen, TEXT_COLOR, (radio_x, radio_y1), radio_button_radius, 2)
+        if selected_mode == "turn_based":
+            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x, radio_y1), radio_button_radius - 4)
+        turn_based_text_surf = font_mode.render(modes["turn_based"]["name"], True, TEXT_COLOR)
+        screen.blit(turn_based_text_surf, (radio_x + text_x_offset, radio_y1 - turn_based_text_surf.get_height() / 2))
+
+        # Lựa chọn 2: "3 phút tổng cộng"
+        pygame.draw.circle(screen, TEXT_COLOR, (radio_x, radio_y2), radio_button_radius, 2)
+        if selected_mode == "total_time":
+            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x, radio_y2), radio_button_radius - 4)
+        total_time_text_surf = font_mode.render(modes["total_time"]["name"], True, TEXT_COLOR)
+        screen.blit(total_time_text_surf, (radio_x + text_x_offset, radio_y2 - total_time_text_surf.get_height() / 2))
+
         # Nút Bắt đầu
-        pygame.draw.rect(screen, BUTTON_COLOR, start_button)
+        pygame.draw.rect(screen, BUTTON_COLOR, start_button, border_radius=10)
         button_text_surf = font_button.render("Bắt đầu", True, BUTTON_TEXT_COLOR)
         screen.blit(button_text_surf, button_text_surf.get_rect(center=start_button.center))
 
         pygame.display.flip()
     
     # Trả về tên người chơi và quân cờ đã chọn
-    # Đảm bảo player1_name luôn là 'X' và player2_name luôn là 'O'
-    # Nếu người chơi 1 chọn O, thì người chơi 2 sẽ là X và ngược lại (đã được xử lý trong PieceDragHandler)
     if drag_handler.player1_piece == 'X':
-        return player1_name.strip(), player2_name.strip()
+        return player1_name.strip(), player2_name.strip(), modes[selected_mode]["time_limit"]
     elif drag_handler.player1_piece == 'O':
-        # Hoán đổi tên nếu người chơi 1 chọn O
-        return player2_name.strip(), player1_name.strip()
-    else:
-        # Trường hợp không chọn quân cờ (không nên xảy ra với logic hiện tại)
-        return player1_name.strip(), player2_name.strip()
+        return player2_name.strip(), player1_name.strip(), modes[selected_mode]["time_limit"]

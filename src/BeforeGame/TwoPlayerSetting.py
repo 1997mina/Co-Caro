@@ -89,9 +89,9 @@ def get_player_names(screen):
                     if player1_name.strip() and player2_name.strip() and drag_handler.player1_piece and drag_handler.player2_piece:
                         # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
                         if drag_handler.player1_piece == 'X':
-                            return player1_name.strip(), player2_name.strip(), modes[selected_mode]["time_limit"]
+                            return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
                         elif drag_handler.player1_piece == 'O':
-                            return player2_name.strip(), player1_name.strip(), modes[selected_mode]["time_limit"]
+                            return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
 
                         game_running = False
                 else:
@@ -194,6 +194,6 @@ def get_player_names(screen):
     
     # Trả về tên người chơi và quân cờ đã chọn
     if drag_handler.player1_piece == 'X':
-        return player1_name.strip(), player2_name.strip(), modes[selected_mode]["time_limit"]
+        return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
     elif drag_handler.player1_piece == 'O':
-        return player2_name.strip(), player1_name.strip(), modes[selected_mode]["time_limit"]
+        return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]

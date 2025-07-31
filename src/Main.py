@@ -4,8 +4,10 @@ from sys import exit
 from BeforeGame.TwoPlayerSetting import get_player_names
 from InGame.EndScreen import show_end_screen
 from InGame.BoardLogic import BoardLogic
-from InGame.TimerLogic import TurnTimer
+from InGame.GameTimer import GameTimer
 from InGame.MainScreen import GameBoard
+from core.SoundManager import SoundManager
+from core.GameStateManager import GameStateManager
 
 if __name__ == '__main__':
     pygame.init()
@@ -21,10 +23,9 @@ if __name__ == '__main__':
     if player_data is None:
         pygame.quit()
         exit()
-    player1_name, player2_name, time_limit = player_data
+    player1_name, player2_name, time_mode, time_limit = player_data
     player_names = {'X': player1_name, 'O': player2_name}
     
-    # Game dimensions
     # Tính toán kích thước để đảm bảo các ô cờ vừa khít và không có khoảng trống
     cell_size = 40
     board_height_cells = screen_height // cell_size
@@ -42,62 +43,77 @@ if __name__ == '__main__':
     WIN_LENGTH = 5
     game_logic = BoardLogic(board_width_cells, board_height_cells, WIN_LENGTH)
 
-    # Các biến trạng thái game
+    # --- Khởi tạo các trình quản lý ---
     current_player = 'X'
-    game_over = False
-    winner = None
     winning_cells = [] # Lưu tọa độ các ô thắng
 
+    # --- Khởi tạo trình quản lý âm thanh ---
+    sound_manager = SoundManager()
+
     # --- Khởi tạo bộ đếm thời gian ---
-    timer = TurnTimer(time_limit_seconds=time_limit)
-    timer.start_turn()
+    timer = GameTimer(time_limit, time_mode)
+    timer.switch_turn(current_player)
+    
+    # --- Khởi tạo trình quản lý trạng thái game ---
+    game_state = GameStateManager(screen)
+    winner = None
 
     running = True
     while running:
         # --- Tính toán thời gian còn lại ---
-        if not game_over:
-            remaining_time = timer.get_remaining_time()
+        if game_state.is_playing():
             if timer.is_time_up():
                 # Hết giờ, người chơi hiện tại bị xử thua.
-                game_over = True
+                game_state.set_game_over(True)
                 winner = 'O' if current_player == 'X' else 'X'
+                sound_manager.play_game_over()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            
-            # Chỉ xử lý click chuột khi game chưa kết thúc
-            if not game_over and event.type == pygame.MOUSEBUTTONDOWN:
-                mouseX, mouseY = event.pos
-                # Chỉ xử lý click nếu nó nằm trong khu vực bàn cờ
-                if mouseX >= panel_actual_width:
-                    clicked_row = mouseY // cell_size
-                    # Bù trừ cho độ rộng của panel khi tính cột
-                    clicked_col = (mouseX - panel_actual_width) // cell_size
 
-                    if board.mark_square(clicked_row, clicked_col, current_player):
-                        # Kiểm tra thắng
-                        winning_line = game_logic.check_win(board.board, current_player, clicked_row, clicked_col)
-                        if winning_line:
-                            winner = current_player
-                            game_over = True
-                            winning_cells = winning_line
-                        # Kiểm tra hòa
-                        elif game_logic.is_board_full(board.board):
-                            winner = "Draw"
-                            game_over = True
-                        else:
-                            # Nếu game chưa kết thúc, đổi lượt chơi
-                            current_player = 'O' if current_player == 'X' else 'X'
-                        
-                        # Reset bộ đếm thời gian cho lượt mới sau khi đi
-                        timer.start_turn()
+            # Ưu tiên xử lý sự kiện của game state (như nút pause)
+            if game_state.handle_event(event, timer, board):
+                continue # Nếu sự kiện đã được xử lý, bỏ qua phần còn lại
+
+            # Chỉ xử lý logic game nếu game đang chạy
+            if game_state.is_playing():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouseX, mouseY = event.pos
+                    # Chỉ xử lý click nếu nó nằm trong khu vực bàn cờ
+                    if mouseX >= panel_actual_width:
+                        clicked_row = mouseY // cell_size
+                        # Bù trừ cho độ rộng của panel khi tính cột
+                        clicked_col = (mouseX - panel_actual_width) // cell_size
+                        if board.mark_square(clicked_row, clicked_col, current_player):
+                            sound_manager.play_move(current_player)
+                            # Kiểm tra thắng
+                            winning_line = game_logic.check_win(board.board, current_player, clicked_row, clicked_col)
+                            if winning_line:
+                                winner = current_player
+                                game_state.set_game_over(True)
+                                sound_manager.play_game_over()
+                                winning_cells = winning_line
+                            # Kiểm tra hòa
+                            elif game_logic.is_board_full(board.board):
+                                winner = "Draw"
+                                game_state.set_game_over(True)
+                            else:
+                                # Nếu game chưa kết thúc, đổi lượt chơi
+                                current_player = 'O' if current_player == 'X' else 'X'
+                            # Chuyển lượt cho timer
+                            timer.switch_turn(current_player)
         
         screen.fill((255, 255, 255))  # Fill background white
-        board.draw(screen, current_player, remaining_time, winning_cells)
+        # Lấy thời gian còn lại của cả hai người chơi để hiển thị
+        remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
+        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells)
+
+        # Vẽ màn hình overlay nếu game đang tạm dừng
+        game_state.draw_overlay()
 
         # Hiển thị thông báo khi game kết thúc
-        if game_over:
+        if game_state.game_over:
             if winner == "Draw":
                 winner_display_name = "Draw"
             else:
@@ -109,11 +125,11 @@ if __name__ == '__main__':
             if play_again:
                 # Thiết lập lại trạng thái game để bắt đầu ván mới
                 board.reset()
-                game_over = False
-                winner = None
+                game_state.reset()
                 current_player = 'X'
                 winning_cells = [] # Xóa các ô thắng của ván trước
-                timer.start_turn() # Reset timer cho game mới
+                timer = GameTimer(time_limit, time_mode) # Reset timer cho game mới
+                timer.switch_turn(current_player)
             else:
                 running = False # Thoát khỏi vòng lặp game
 

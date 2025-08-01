@@ -10,14 +10,19 @@ class PlayerInfoPanel:
         self.player_names = player_names
         
         # Tạo phiên bản ảnh nhỏ hơn cho panel
-        icon_size = 50
+        icon_size = 50 # Tăng kích thước cho cân đối
         self.x_img = pygame.transform.smoothscale(x_img, (icon_size, icon_size))
         self.o_img = pygame.transform.smoothscale(o_img, (icon_size, icon_size))
         
+        # Tải và thay đổi kích thước ảnh đại diện người chơi
+        player_icon_size = 100
+        self.player_icon_img = pygame.image.load(os.path.join('img', 'Player.png')).convert_alpha()
+        self.player_icon_img = pygame.transform.smoothscale(self.player_icon_img, (player_icon_size, player_icon_size))
+        
         # Fonts
-        self.font_name = pygame.font.SysFont("Times New Roman", 28, bold=True)
-        self.font_total_time_label = pygame.font.SysFont("Times New Roman", 22)
-        self.font_turn = pygame.font.SysFont("Times New Roman", 22, italic=True)
+        self.font_name = pygame.font.SysFont("Times New Roman", 32, bold=True)
+        self.font_total_time_label = pygame.font.SysFont("Times New Roman", 24)
+        self.font_turn = pygame.font.SysFont("Times New Roman", 24, italic=True)
         self.font_timer = pygame.font.SysFont("Arial", 42, bold=True)
         self.font_button = pygame.font.SysFont("Times New Roman", 24, bold=True)
         
@@ -43,79 +48,82 @@ class PlayerInfoPanel:
         self.pause_button_rect = pygame.Rect(0, 0, self.button_img_size + 20, self.button_img_size + 20) # Thêm padding cho viền, sẽ dùng cho hình tròn
         self.pause_button_rect.center = (self.rect.centerx, self.rect.height - 80)
 
+    def _draw_player_info(self, screen, player_char, player_name, player_time, is_current_player, time_mode, player_area):
+        """Vẽ thông tin cho một người chơi cụ thể trong khu vực được chỉ định."""
+        if is_current_player:
+            pygame.draw.rect(screen, self.highlight_color, player_area, border_radius=10)
+        
+        # --- Bố cục từ trên xuống cho các thành phần cố định ---
+        y_cursor = player_area.y + 10  # Bắt đầu với một chút padding trên (giảm để có thêm không gian)
+
+        # 1. Icon người chơi
+        player_icon_rect = self.player_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
+        screen.blit(self.player_icon_img, player_icon_rect)
+        y_cursor = player_icon_rect.bottom  # Di chuyển con trỏ xuống dưới icon (giảm padding)
+
+        # 2. Tên người chơi
+        name_surf = self.font_name.render(player_name, True, self.text_color)
+        name_rect = name_surf.get_rect(centerx=player_area.centerx, top=y_cursor)
+        screen.blit(name_surf, name_rect)
+        y_cursor = name_rect.bottom + 15 # Giảm padding
+
+        # 3. Biểu tượng X/O
+        icon_img = self.x_img if player_char == 'X' else self.o_img
+        icon_rect = icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
+        screen.blit(icon_img, icon_rect)
+
+        # --- Bố cục từ dưới lên cho các thành phần có điều kiện ---
+        y_cursor_bottom = player_area.bottom - 5  # Bắt đầu từ dưới (giảm padding)
+
+        # 4. Vẽ bộ đếm thời gian
+        if time_mode == "total_time" or (time_mode == "turn_based" and is_current_player):
+            warning_threshold = 30 if time_mode == "total_time" else 10
+            
+            seconds = max(0, int(player_time))
+            minutes = seconds // 60
+            seconds_display = seconds % 60
+            timer_text = f"{minutes:01d}:{seconds_display:02d}"
+
+            if time_mode == "total_time" and not is_current_player:
+                timer_color = self.timer_inactive_color
+            else:
+                timer_color = self.timer_warning_color if player_time < warning_threshold else self.timer_color
+
+            timer_surf = self.font_timer.render(timer_text, True, timer_color)
+            timer_rect = timer_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
+            screen.blit(timer_surf, timer_rect)
+            y_cursor_bottom = timer_rect.top - 1  # Dịch con trỏ lên trên (giảm padding)
+        
+        # 5. Thông báo lượt chơi
+        if is_current_player:
+            turn_surf = self.font_turn.render("Đến lượt!", True, self.text_color) # Dùng text ngắn gọn hơn
+            turn_rect = turn_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
+            screen.blit(turn_surf, turn_rect)
+
     def draw(self, screen, current_player, remaining_times, time_mode, paused):
-        # Lấy chế độ chơi từ Main.py (cần truyền vào hoặc lấy từ một biến toàn cục)
         # Vẽ nền panel
         pygame.draw.rect(screen, self.bg_color, self.rect)
         
-        # Tính toán vị trí các thành phần để cân đối
-        area_height = 200
+        # Tính toán vị trí và kích thước cho khu vực của mỗi người chơi
         area_width = self.rect.width - 20
-        margin_from_center = 40 # Khoảng cách từ đường kẻ giữa đến khu vực thông tin
-        divider_y = self.rect.centery
+        # Tăng chiều cao để có đủ không gian cho icon 120x120 và các thông tin khác
+        area_height = 300 
+        margin_from_center = 10
+        # Dịch chuyển đường kẻ lên một chút để cân bằng với nút Pause ở dưới
+        divider_y = self.rect.centery - 60
         
-        # --- Vẽ thông tin người chơi 1 ---
+        # --- Khu vực người chơi 1 ---
         p1_y = divider_y - margin_from_center - area_height
         p1_area = pygame.Rect(self.rect.x + 10, p1_y, area_width, area_height)
-        if current_player == 'X':
-            pygame.draw.rect(screen, self.highlight_color, p1_area, border_radius=10)
-            turn_surf_p1 = self.font_turn.render("Lượt của bạn!", True, self.text_color)
-            screen.blit(turn_surf_p1, turn_surf_p1.get_rect(centerx=self.rect.centerx, y=p1_area.y + 110))
-        
-        p1_name_surf = self.font_name.render(self.player_names['X'], True, self.text_color)
-        screen.blit(p1_name_surf, p1_name_surf.get_rect(centerx=self.rect.centerx, y=p1_area.y + 20))
-        screen.blit(self.x_img, self.x_img.get_rect(centerx=self.rect.centerx, y=p1_area.y + 60))
-
-        # Vẽ bộ đếm thời gian cho P1
-        # Chỉ hiển thị đồng hồ đếm ngược cho người chơi hiện tại trong chế độ "theo lượt"
-        if time_mode == "total_time" or (time_mode == "turn_based" and current_player == 'X'):
-            warning_threshold = 30 if time_mode == "total_time" else 10
-            p1_time = remaining_times['X']
-            seconds_p1 = max(0, int(p1_time))
-            minutes_p1 = seconds_p1 // 60
-            seconds_display_p1 = seconds_p1 % 60
-            timer_text_p1 = f"{minutes_p1:01d}:{seconds_display_p1:02d}"
-
-            if time_mode == "total_time" and current_player != 'X':
-                timer_color_p1 = self.timer_inactive_color
-            else:
-                warning_threshold = 30 if time_mode == "total_time" else 10
-                timer_color_p1 = self.timer_warning_color if p1_time < warning_threshold else self.timer_color
-
-            timer_surf_p1 = self.font_timer.render(timer_text_p1, True, timer_color_p1) # Sử dụng màu đã chọn
-            screen.blit(timer_surf_p1, timer_surf_p1.get_rect(centerx=self.rect.centerx, y=p1_area.y + 140))
+        self._draw_player_info(screen, 'X', self.player_names['X'], remaining_times['X'], current_player == 'X', time_mode, p1_area)
 
         # --- Vẽ đường phân cách ---
         pygame.draw.line(screen, self.divider_color, (self.rect.x + 20, divider_y), (self.rect.right - 20, divider_y), 2)
 
-        # --- Vẽ thông tin người chơi 2 ---
+        # --- Khu vực người chơi 2 ---
         p2_y = divider_y + margin_from_center
         p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height)
-        if current_player == 'O':
-            pygame.draw.rect(screen, self.highlight_color, p2_area, border_radius=10)
-            turn_surf_p2 = self.font_turn.render("Lượt của bạn!", True, self.text_color)
-            screen.blit(turn_surf_p2, turn_surf_p2.get_rect(centerx=self.rect.centerx, y=p2_area.y + 110))
-        
-        p2_name_surf = self.font_name.render(self.player_names['O'], True, self.text_color)
-        screen.blit(p2_name_surf, p2_name_surf.get_rect(centerx=self.rect.centerx, y=p2_area.y + 20))
-        screen.blit(self.o_img, self.o_img.get_rect(centerx=self.rect.centerx, y=p2_area.y + 60))
-
-        # Vẽ bộ đếm thời gian cho P2
-        warning_threshold = 30 if time_mode == "total_time" else 10
-        if time_mode == "total_time" or (time_mode == "turn_based" and current_player == 'O'):
-            p2_time = remaining_times['O']
-            seconds_p2 = max(0, int(p2_time))
-            minutes_p2 = seconds_p2 // 60
-            seconds_display_p2 = seconds_p2 % 60
-            timer_text_p2 = f"{minutes_p2:01d}:{seconds_display_p2:02d}"
-            
-            if time_mode == "total_time" and current_player != 'O':
-                timer_color_p2 = self.timer_inactive_color
-            else:
-                warning_threshold = 30 if time_mode == "total_time" else 10
-                timer_color_p2 = self.timer_warning_color if p2_time < warning_threshold else self.timer_color
-            timer_surf_p2 = self.font_timer.render(timer_text_p2, True, timer_color_p2)
-            screen.blit(timer_surf_p2, timer_surf_p2.get_rect(centerx=self.rect.centerx, y=p2_area.y + 140))
+        self._draw_player_info(screen, 'O', self.player_names['O'], remaining_times['O'], current_player == 'O', time_mode, p2_area)
 
         # --- Vẽ nút Tạm dừng/Tiếp tục (sử dụng hình ảnh) ---
         pygame.draw.circle(screen, self.pause_button_bg_color, self.pause_button_rect.center, self.pause_button_rect.width // 2) # Nền vàng

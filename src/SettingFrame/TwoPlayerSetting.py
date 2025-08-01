@@ -53,8 +53,8 @@ def get_player_names(screen):
 
     # Các chế độ chơi
     modes = {
-        "turn_based": {"name": "30 giây mỗi lượt", "time_limit": 30},
-        "total_time": {"name": "3 phút tổng cộng", "time_limit": 180}
+        "turn_based": {"name": "20 giây mỗi lượt", "time_limit": 20},
+        "total_time": {"name": "2 phút tổng cộng", "time_limit": 120}
     }
     selected_mode = "turn_based" # Chế độ mặc định
 
@@ -161,7 +161,7 @@ def get_player_names(screen):
         screen.blit(drag_instruction_surf, drag_instruction_surf.get_rect(center=(screen_width / 2, 320)))
 
         # Vẽ lựa chọn chế độ chơi
-        mode_label_surf = font_label.render("Chọn chế độ chơi:", True, TEXT_COLOR)
+        mode_label_surf = font_label.render("Chọn chế độ thời gian:", True, TEXT_COLOR)
         screen.blit(mode_label_surf, mode_label_surf.get_rect(center=(screen_width / 2, 500)))
 
         # --- Vẽ Radio Buttons ---

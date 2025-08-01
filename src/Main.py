@@ -1,13 +1,13 @@
 import pygame
 
 from sys import exit
-from BeforeGame.TwoPlayerSetting import get_player_names
+from SettingFrame.TwoPlayerSetting import get_player_names
 from InGame.EndScreen import show_end_screen
 from InGame.BoardLogic import BoardLogic
-from InGame.GameTimer import GameTimer
-from InGame.MainScreen import GameBoard
-from core.SoundManager import SoundManager
-from core.GameStateManager import GameStateManager
+from Manager.TimerManager import TimerManager
+from InGame.GameBoard import GameBoard
+from Manager.SoundManager import SoundManager
+from Manager.GameStateManager import GameStateManager
 
 if __name__ == '__main__':
     pygame.init()
@@ -35,6 +35,10 @@ if __name__ == '__main__':
     # sẽ được thêm vào panel để lấp đầy màn hình.
     board_width_cells = (screen_width - 250) // cell_size
     panel_actual_width = screen_width - (board_width_cells * cell_size)
+    board_pixel_width = board_width_cells * cell_size
+
+    # Xác định khu vực bàn cờ để làm mờ khi tạm dừng
+    board_rect = pygame.Rect(panel_actual_width, 0, board_pixel_width, screen_height)
 
     # Khởi tạo bàn cờ và logic game
     board = GameBoard(board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names)
@@ -51,11 +55,11 @@ if __name__ == '__main__':
     sound_manager = SoundManager()
 
     # --- Khởi tạo bộ đếm thời gian ---
-    timer = GameTimer(time_limit, time_mode)
+    timer = TimerManager(time_limit, time_mode)
     timer.switch_turn(current_player)
     
     # --- Khởi tạo trình quản lý trạng thái game ---
-    game_state = GameStateManager(screen)
+    game_state = GameStateManager(screen, board_rect)
     winner = None
 
     running = True
@@ -120,7 +124,7 @@ if __name__ == '__main__':
                 winner_display_name = player_names.get(winner, "Unknown")
             
             # Hiển thị màn hình kết thúc và chờ lựa chọn của người dùng
-            play_again = show_end_screen(screen, winner_display_name)
+            play_again = show_end_screen(screen, winner_display_name, board_rect)
 
             if play_again:
                 # Thiết lập lại trạng thái game để bắt đầu ván mới
@@ -128,7 +132,7 @@ if __name__ == '__main__':
                 game_state.reset()
                 current_player = 'X'
                 winning_cells = [] # Xóa các ô thắng của ván trước
-                timer = GameTimer(time_limit, time_mode) # Reset timer cho game mới
+                timer = TimerManager(time_limit, time_mode) # Reset timer cho game mới
                 timer.switch_turn(current_player)
             else:
                 running = False # Thoát khỏi vòng lặp game

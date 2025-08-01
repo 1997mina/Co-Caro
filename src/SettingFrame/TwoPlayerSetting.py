@@ -1,6 +1,6 @@
 import pygame
 
-from BeforeGame.PieceDragHandler import PieceDragHandler
+from Handler.PieceDragHandler import PieceDragHandler
 
 # Hằng số cho màu sắc và font chữ
 BG_COLOR = (255, 255, 255)

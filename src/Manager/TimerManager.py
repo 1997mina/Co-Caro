@@ -1,6 +1,6 @@
 import pygame
 
-class GameTimer:
+class TimerManager:
     """
     Lớp quản lý bộ đếm thời gian cho cả ván đấu.
     Hỗ trợ chế độ "theo lượt" (turn_based) và "tổng thời gian" (total_time).

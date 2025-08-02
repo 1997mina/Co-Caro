@@ -20,7 +20,7 @@ BACK_BUTTON_TEXT_COLOR = (40, 40, 40) # Màu đen cho chữ nút Quay lại
 MODE_BUTTON_COLOR_INACTIVE = (220, 220, 220)
 MODE_BUTTON_COLOR_ACTIVE = (0, 150, 136)
 
-def get_player_names(screen):
+def get_two_player_setting(screen):
     """
     Hiển thị màn hình để người dùng nhập tên và trả về tên của họ.
     """

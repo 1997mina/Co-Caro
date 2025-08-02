@@ -40,7 +40,7 @@ class AIPlayer:
         for r in range(board_logic.height):
             for c in range(board_logic.width):
                 # Nếu ô trống, xem xét đây là một nước đi tiềm năng
-                if board_logic.board[r][c] is None:
+                if board_logic.board[r][c] == '':
                     # Tính điểm tấn công (nếu AI đi vào ô này)
                     attack_score = self._calculate_score(board_logic, r, c, self.AI_SYMBOL)
                     # Tính điểm phòng thủ (nếu người chơi đi vào ô này)
@@ -94,37 +94,37 @@ class AIPlayer:
         # Live Four: _XXXX_
         for i in range(len(line) - 5):
             window = line[i:i+6]
-            if window.count(player_symbol) == 4 and window.count(None) == 2:
-                 if window[0] is None and window[5] is None:
+            if window.count(player_symbol) == 4 and window.count('') == 2:
+                 if window[0] == '' and window[5] == '':
                     score += self.SCORE_PATTERNS['LIVE_FOUR']
 
         # --- Đánh giá các mẫu 3 quân ---
         # Live Three: _XXX_
         for i in range(len(line) - 4):
             window = line[i:i+5]
-            if window.count(player_symbol) == 3 and window.count(None) == 2:
-                if window[0] is None and window[4] is None:
+            if window.count(player_symbol) == 3 and window.count('') == 2:
+                if window[0] == '' and window[4] == '':
                     score += self.SCORE_PATTERNS['LIVE_THREE']
 
         # --- Đánh giá các mẫu 2 quân ---
         # Live Two: _XX_
         for i in range(len(line) - 3):
             window = line[i:i+4]
-            if window.count(player_symbol) == 2 and window.count(None) == 2:
-                if window[0] is None and window[3] is None:
+            if window.count(player_symbol) == 2 and window.count('') == 2:
+                if window[0] == '' and window[3] == '':
                     score += self.SCORE_PATTERNS['LIVE_TWO']
 
         # --- Đánh giá các mẫu bị chặn 1 đầu ---
         for i in range(len(line) - 4):
             window = line[i:i+5]
             # Dead Four: OXXXX_ hoặc _XXXXO
-            if window.count(player_symbol) == 4 and window.count(None) == 1:
+            if window.count(player_symbol) == 4 and window.count('') == 1:
                 score += self.SCORE_PATTERNS['DEAD_FOUR']
             # Dead Three: OXXX_ hoặc _XXXO
-            if window.count(player_symbol) == 3 and window.count(None) == 1 and window.count(opponent_symbol) == 1:
+            if window.count(player_symbol) == 3 and window.count('') == 1 and window.count(opponent_symbol) == 1:
                 score += self.SCORE_PATTERNS['DEAD_THREE']
             # Dead Two: OXX_ hoặc _XXO
-            if window.count(player_symbol) == 2 and window.count(None) == 1 and window.count(opponent_symbol) == 1:
+            if window.count(player_symbol) == 2 and window.count('') == 1 and window.count(opponent_symbol) == 1:
                 score += self.SCORE_PATTERNS['DEAD_TWO']
 
         # --- Đánh giá trường hợp thắng ---
@@ -134,4 +134,3 @@ class AIPlayer:
                 score += self.SCORE_PATTERNS['FIVE']
 
         return score
-

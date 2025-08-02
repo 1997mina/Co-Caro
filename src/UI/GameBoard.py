@@ -1,10 +1,8 @@
 import pygame
 import os
 
-from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
-
 class GameBoard:
-    def __init__(self, board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names):
+    def __init__(self, board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names, info_panel_class):
         self.board_width_cells = board_width_cells
         self.board_height_cells = board_height_cells
         self.cell_size = cell_size
@@ -27,7 +25,7 @@ class GameBoard:
         # Khởi tạo InfoPanel
         panel_width = screen_width - self.board_pixel_width
         panel_rect = pygame.Rect(0, 0, panel_width, screen_height)
-        self.player_info_panel = TwoPlayerInfoPanel(panel_rect, player_names, self.x_img, self.o_img)
+        self.player_info_panel = info_panel_class(panel_rect, player_names, self.x_img, self.o_img)
 
     def mark_square(self, row, col, player):
         """Đánh dấu một ô trên bàn cờ nếu ô đó còn trống."""

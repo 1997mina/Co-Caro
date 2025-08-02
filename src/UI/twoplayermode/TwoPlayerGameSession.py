@@ -7,8 +7,9 @@ from manager.TimerManager import TimerManager
 from ui.EndScreen import show_end_screen
 from ui.GameBoard import GameBoard
 from ui.twoplayermode.TwoPlayerSetting import get_two_player_setting
+from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
 
-def start_game_session(screen):
+def start_two_players_session(screen):
     """
     Bắt đầu một phiên chơi game mới cho 2 người.
     Hàm này sẽ chạy cho đến khi một ván game kết thúc và người dùng chọn thoát về menu chính.
@@ -35,7 +36,7 @@ def start_game_session(screen):
     board_rect = pygame.Rect(panel_actual_width, 0, board_pixel_width, screen_height)
 
     # Khởi tạo bàn cờ và logic game
-    board = GameBoard(board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names)
+    board = GameBoard(board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names, TwoPlayerInfoPanel)
 
     # Khởi tạo logic game
     WIN_LENGTH = 5

@@ -1,17 +1,22 @@
 import pygame
 import os
 
-from Handler.PieceDragHandler import PieceDragHandler
+from handler.PieceDragHandler import PieceDragHandler
 
 # Hằng số cho màu sắc và font chữ
 BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
 INPUT_BOX_COLOR_INACTIVE = (200, 200, 200)
 INPUT_BOX_COLOR_ACTIVE = (100, 100, 100)
-BUTTON_COLOR = (0, 150, 136)
+START_BUTTON_COLOR = (204, 0, 0)       # Màu đỏ cho nút Bắt đầu
+START_BUTTON_HOVER_COLOR = (230, 0, 0) # Màu đỏ sáng hơn khi di chuột
+START_BUTTON_DISABLED_COLOR = (180, 180, 180)
 DRAG_COLOR = (150, 150, 150)
 DRAG_HIGHLIGHT_COLOR = (100, 100, 100) # Màu highlight khi kéo vào ô thả
 BUTTON_TEXT_COLOR = (255, 255, 255)
+BACK_BUTTON_COLOR = (100, 100, 100) # Màu xám đậm cho nút Quay lại
+BACK_BUTTON_HOVER_COLOR = (130, 130, 130)
+BACK_BUTTON_TEXT_COLOR = (40, 40, 40) # Màu đen cho chữ nút Quay lại
 MODE_BUTTON_COLOR_INACTIVE = (220, 220, 220)
 MODE_BUTTON_COLOR_ACTIVE = (0, 150, 136)
 
@@ -83,9 +88,18 @@ def get_player_names(screen):
     back_button = pygame.Rect(screen_width / 2 - 50 - button_width, 700, button_width, button_height)
     game_running = True
     while game_running:
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Điều kiện để kích hoạt nút "Bắt đầu"
+        is_start_enabled = (player1_name.strip() and
+                            player2_name.strip() and
+                            drag_handler.player1_piece and
+                            drag_handler.player2_piece)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return None # Trả về None để báo hiệu người dùng muốn thoát
+                pygame.quit()
+                exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box1.collidepoint(event.pos):
@@ -96,16 +110,16 @@ def get_player_names(screen):
                     selected_mode = "turn_based"
                 elif radio_total_time_rect.collidepoint(event.pos):
                     selected_mode = "total_time"
-                elif start_button.collidepoint(event.pos):
-                    # Chỉ bắt đầu khi cả hai người chơi đã nhập tên và đã chọn quân cờ
-                    if player1_name.strip() and player2_name.strip() and drag_handler.player1_piece and drag_handler.player2_piece:
-                        # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
-                        if drag_handler.player1_piece == 'X':
-                            return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
-                        elif drag_handler.player1_piece == 'O':
-                            return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
+                elif start_button.collidepoint(event.pos) and is_start_enabled:
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
+                    # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
+                    if drag_handler.player1_piece == 'X':
+                        return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
+                    elif drag_handler.player1_piece == 'O':
+                        return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
 
                 elif back_button.collidepoint(event.pos):
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
                     return None # Quay lại menu chính
                 else:
                     active_box = None
@@ -136,6 +150,18 @@ def get_player_names(screen):
         # Lấp đầy màn hình bằng một màu nền đặc trước khi vẽ ảnh nền trong suốt
         screen.fill(BG_COLOR)
         screen.blit(background_img, (0, 0))
+
+        # Thay đổi con trỏ chuột khi di chuột qua các nút có thể nhấn
+        cursor_changed = False
+        if is_start_enabled and start_button.collidepoint(mouse_pos):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            cursor_changed = True
+        elif back_button.collidepoint(mouse_pos):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            cursor_changed = True
+
+        if not cursor_changed:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
         # Nhập tên người chơi 1
         label1_surf = font_label.render("Người chơi 1:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
@@ -201,12 +227,23 @@ def get_player_names(screen):
         screen.blit(total_time_text_surf, (radio_x + text_x_offset, radio_y2 - total_time_text_surf.get_height() / 2))
 
         # Nút Bắt đầu
-        pygame.draw.rect(screen, BUTTON_COLOR, start_button, border_radius=10)
+        if is_start_enabled:
+            if start_button.collidepoint(mouse_pos):
+                button_color = START_BUTTON_HOVER_COLOR
+            else:
+                button_color = START_BUTTON_COLOR
+        else:
+            button_color = START_BUTTON_DISABLED_COLOR
+        pygame.draw.rect(screen, button_color, start_button, border_radius=10)
         button_text_surf = font_button.render("Bắt đầu", True, BUTTON_TEXT_COLOR)
         screen.blit(button_text_surf, button_text_surf.get_rect(center=start_button.center))
 
         # Vẽ nút Quay lại
-        pygame.draw.rect(screen, BUTTON_COLOR, back_button, border_radius=10)
+        if back_button.collidepoint(mouse_pos):
+            back_button_color = BACK_BUTTON_HOVER_COLOR
+        else:
+            back_button_color = BACK_BUTTON_COLOR
+        pygame.draw.rect(screen, back_button_color, back_button, border_radius=10)
         back_text_surf = font_button.render("Quay lại", True, BUTTON_TEXT_COLOR)
         screen.blit(back_text_surf, back_text_surf.get_rect(center=back_button.center))
 

@@ -1,14 +1,15 @@
 import pygame
 import sys
 
-from UI.MainMenu import show_main_menu
-from UI.TwoPlayerSetting import get_player_names
+from ui.MainMenu import show_main_menu
+from ui.vsAiSetting import get_ai_game_settings
+from ui.TwoPlayerSetting import get_player_names
 from InGame.EndScreen import show_end_screen
-from InGame.BoardLogic import BoardLogic
-from Manager.TimerManager import TimerManager
+from logic.BoardLogic import BoardLogic
+from manager.TimerManager import TimerManager
 from InGame.GameBoard import GameBoard
-from Manager.SoundManager import SoundManager
-from Manager.GameStateManager import GameStateManager
+from manager.SoundManager import SoundManager
+from manager.GameStateManager import GameStateManager
     
 def start_game_session(screen):
     """
@@ -70,7 +71,8 @@ def start_game_session(screen):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                exit()
 
             # Ưu tiên xử lý sự kiện của game state (như nút pause)
             if game_state.handle_event(event, timer, board):
@@ -155,9 +157,8 @@ if __name__ == '__main__':
         if choice == '2_players':
             start_game_session(screen)
         elif choice == 'vs_ai':
-            # Chức năng này chưa được phát triển, có thể hiển thị một thông báo tạm thời
-            print("Chức năng 'Chơi với máy' chưa có.")
-            pygame.time.wait(500) # Đợi một chút trước khi quay lại menu
+            # Gọi màn hình cài đặt cho chế độ chơi với máy
+            ai_settings = get_ai_game_settings(screen)
         elif choice == 'quit':
             break # Thoát khỏi vòng lặp chính của ứng dụng
 

@@ -1,5 +1,5 @@
 import pygame
-from Handler.PauseHandler import PauseHandler
+from handler.PauseHandler import PauseHandler
 
 class GameStateManager:
     """

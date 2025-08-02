@@ -48,7 +48,7 @@ def show_main_menu(screen):
     # Lưu thông tin các nút vào một dictionary để dễ quản lý
     buttons = {
         '2_players': {'rect': two_players_button, 'text': 'Chơi 2 người', 'enabled': True},
-        'vs_ai': {'rect': vs_ai_button, 'text': 'Chơi với máy (Chưa có)', 'enabled': False},
+        'vs_ai': {'rect': vs_ai_button, 'text': 'Chơi với máy', 'enabled': True},
         'quit': {'rect': quit_button, 'text': 'Thoát Game', 'enabled': True}
     }
 

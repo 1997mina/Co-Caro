@@ -1,4 +1,5 @@
 import pygame
+import os
 
 from Handler.PieceDragHandler import PieceDragHandler
 
@@ -24,6 +25,13 @@ def get_player_names(screen):
     font_input = pygame.font.SysFont("Times New Roman", 32)
     font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)
     font_mode = pygame.font.SysFont("Times New Roman", 28)
+
+    # Tải hình nền
+    background_img = pygame.image.load(os.path.join('img', 'Background.jpg')).convert()
+    background_img = pygame.transform.scale(background_img, (screen_width, screen_height))
+
+    # Thiết lập độ mờ cho ảnh nền
+    background_img.set_alpha(50)
 
     # Tải và thay đổi kích thước hình ảnh X và O
     img_size = 50
@@ -67,8 +75,12 @@ def get_player_names(screen):
     radio_total_time_rect = pygame.Rect(screen_width / 2 - 150, radio_button_y_start + radio_button_spacing - radio_button_radius, 300, radio_button_radius * 2)
 
     # Nút Bắt đầu
-    start_button = pygame.Rect(screen_width / 2 - 100, 700, 200, 60)
-    
+    button_width = 200
+    button_height = 60
+    start_button = pygame.Rect(screen_width / 2 + 50, 700, button_width, button_height)
+
+    # Nút Quay lại
+    back_button = pygame.Rect(screen_width / 2 - 50 - button_width, 700, button_width, button_height)
     game_running = True
     while game_running:
         for event in pygame.event.get():
@@ -93,7 +105,8 @@ def get_player_names(screen):
                         elif drag_handler.player1_piece == 'O':
                             return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
 
-                        game_running = False
+                elif back_button.collidepoint(event.pos):
+                    return None # Quay lại menu chính
                 else:
                     active_box = None
                 
@@ -120,7 +133,9 @@ def get_player_names(screen):
                         player2_name += event.unicode
 
         # --- Vẽ lên màn hình ---
+        # Lấp đầy màn hình bằng một màu nền đặc trước khi vẽ ảnh nền trong suốt
         screen.fill(BG_COLOR)
+        screen.blit(background_img, (0, 0))
 
         # Nhập tên người chơi 1
         label1_surf = font_label.render("Người chơi 1:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
@@ -190,10 +205,9 @@ def get_player_names(screen):
         button_text_surf = font_button.render("Bắt đầu", True, BUTTON_TEXT_COLOR)
         screen.blit(button_text_surf, button_text_surf.get_rect(center=start_button.center))
 
+        # Vẽ nút Quay lại
+        pygame.draw.rect(screen, BUTTON_COLOR, back_button, border_radius=10)
+        back_text_surf = font_button.render("Quay lại", True, BUTTON_TEXT_COLOR)
+        screen.blit(back_text_surf, back_text_surf.get_rect(center=back_button.center))
+
         pygame.display.flip()
-    
-    # Trả về tên người chơi và quân cờ đã chọn
-    if drag_handler.player1_piece == 'X':
-        return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
-    elif drag_handler.player1_piece == 'O':
-        return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]

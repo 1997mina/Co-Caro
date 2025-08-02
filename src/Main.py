@@ -1,28 +1,26 @@
 import pygame
+import sys
 
-from sys import exit
-from SettingFrame.TwoPlayerSetting import get_player_names
+from UI.MainMenu import show_main_menu
+from UI.TwoPlayerSetting import get_player_names
 from InGame.EndScreen import show_end_screen
 from InGame.BoardLogic import BoardLogic
 from Manager.TimerManager import TimerManager
 from InGame.GameBoard import GameBoard
 from Manager.SoundManager import SoundManager
 from Manager.GameStateManager import GameStateManager
-
-if __name__ == '__main__':
-    pygame.init()
-
-    # Screen dimensions
-    screen_width = 1000
-    screen_height = 800
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("Cờ Caro")
-
+    
+def start_game_session(screen):
+    """
+    Bắt đầu một phiên chơi game mới cho 2 người.
+    Hàm này sẽ chạy cho đến khi một ván game kết thúc và người dùng chọn thoát về menu chính.
+    """
+    screen_width, screen_height = screen.get_size()
     # --- Màn hình nhập tên ---
     player_data = get_player_names(screen)
     if player_data is None:
-        pygame.quit()
-        exit()
+        # Quay về menu chính.
+        return
     player1_name, player2_name, time_mode, time_limit = player_data
     player_names = {'X': player1_name, 'O': player2_name}
     
@@ -31,8 +29,6 @@ if __name__ == '__main__':
     board_height_cells = screen_height // cell_size
 
     # Tính toán chiều rộng thực tế của panel và bàn cờ.
-    # Panel sẽ có chiều rộng TỐI THIỂU là 250px, phần dư từ phép chia ô cờ
-    # sẽ được thêm vào panel để lấp đầy màn hình.
     board_width_cells = (screen_width - 250) // cell_size
     panel_actual_width = screen_width - (board_width_cells * cell_size)
     board_pixel_width = board_width_cells * cell_size
@@ -108,7 +104,7 @@ if __name__ == '__main__':
                             # Chuyển lượt cho timer
                             timer.switch_turn(current_player)
         
-        screen.fill((255, 255, 255))  # Fill background white
+        screen.fill((255, 255, 255))
         # Lấy thời gian còn lại của cả hai người chơi để hiển thị
         remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
         board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells)
@@ -139,4 +135,31 @@ if __name__ == '__main__':
 
         pygame.display.flip()
 
+if __name__ == '__main__':
+    """
+    Hàm chính của ứng dụng. Khởi tạo Pygame, hiển thị menu chính,
+    và điều khiển luồng chính của game.
+    """
+    pygame.init()
+
+    # Screen dimensions
+    screen_width = 1000
+    screen_height = 800
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Cờ Caro")
+
+    # Vòng lặp chính của ứng dụng
+    while True:
+        choice = show_main_menu(screen)
+
+        if choice == '2_players':
+            start_game_session(screen)
+        elif choice == 'vs_ai':
+            # Chức năng này chưa được phát triển, có thể hiển thị một thông báo tạm thời
+            print("Chức năng 'Chơi với máy' chưa có.")
+            pygame.time.wait(500) # Đợi một chút trước khi quay lại menu
+        elif choice == 'quit':
+            break # Thoát khỏi vòng lặp chính của ứng dụng
+
     pygame.quit()
+    sys.exit()

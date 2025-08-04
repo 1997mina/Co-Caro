@@ -1,5 +1,5 @@
 import pygame
-import os
+from utils.ResourcePath import resource_path
 
 class InfoPanel:
     """
@@ -18,7 +18,7 @@ class InfoPanel:
         
         # Tải và thay đổi kích thước ảnh đại diện người chơi mặc định
         player_icon_size = 100
-        self.player_icon_img = pygame.image.load(os.path.join('img', 'Player.png')).convert_alpha()
+        self.player_icon_img = pygame.image.load(resource_path('img/Player.png')).convert_alpha()
         self.player_icon_img = pygame.transform.smoothscale(self.player_icon_img, (player_icon_size, player_icon_size))
         
         # Fonts
@@ -40,8 +40,8 @@ class InfoPanel:
         self.pause_button_border_color = (128, 128, 128) # Màu xám cho viền nút tạm dừng
 
         # Nút tạm dừng (sử dụng hình ảnh)
-        self.pause_img = pygame.image.load(os.path.join('img', 'Pause.png')).convert_alpha()
-        self.play_img = pygame.image.load(os.path.join('img', 'Play.png')).convert_alpha()
+        self.pause_img = pygame.image.load(resource_path('img/Pause.png')).convert_alpha()
+        self.play_img = pygame.image.load(resource_path('img/Play.png')).convert_alpha()
         self.button_img_size = 60
         self.pause_img = pygame.transform.scale(self.pause_img, (self.button_img_size, self.button_img_size))
         self.play_img = pygame.transform.scale(self.play_img, (self.button_img_size, self.button_img_size))

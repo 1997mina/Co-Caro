@@ -1,6 +1,6 @@
 import pygame
-import os
 
+from utils.ResourcePath import resource_path
 from ui.InfoPanel import InfoPanel
 
 class vsAiInfoPanel(InfoPanel):
@@ -16,7 +16,7 @@ class vsAiInfoPanel(InfoPanel):
         
         # Tải và thay đổi kích thước ảnh đại diện người chơi
         player_icon_size = 100
-        self.ai_icon_img = pygame.image.load(os.path.join('img', 'Computer.png')).convert_alpha() # Ảnh đại diện cho máy
+        self.ai_icon_img = pygame.image.load(resource_path('img/Computer.png')).convert_alpha() # Ảnh đại diện cho máy
         self.ai_icon_img = pygame.transform.smoothscale(self.ai_icon_img, (player_icon_size, player_icon_size))
         
     def _get_player_icon(self, player_name):

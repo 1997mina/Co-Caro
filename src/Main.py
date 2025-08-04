@@ -11,10 +11,6 @@ if __name__ == '__main__':
     Hàm chính của ứng dụng. Khởi tạo Pygame, hiển thị menu chính,
     và điều khiển luồng chính của game.
     """
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    os.chdir(project_root)
-
     pygame.init()
 
     # Screen dimensions

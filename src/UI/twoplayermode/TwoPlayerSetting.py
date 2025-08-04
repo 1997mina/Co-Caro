@@ -1,8 +1,8 @@
 import pygame
-import os
 
 from manager.SoundManager import SoundManager
 from handler.PieceDragHandler import PieceDragHandler
+from utils.ResourcePath import resource_path
 
 # Hằng số cho màu sắc và font chữ
 BG_COLOR = (255, 255, 255)
@@ -33,16 +33,16 @@ def get_two_player_setting(screen):
     font_mode = pygame.font.SysFont("Times New Roman", 28)
 
     # Tải hình nền
-    background_img = pygame.image.load(os.path.join('img', 'Background.jpg')).convert()
+    background_img = pygame.image.load(resource_path('img/Background.jpg')).convert()
     background_img = pygame.transform.scale(background_img, (screen_width, screen_height))
 
     # Thiết lập độ mờ cho ảnh nền
     background_img.set_alpha(50)
 
     # Tải và thay đổi kích thước hình ảnh X và O
-    img_size = 50
-    x_img_raw = pygame.image.load('img/X.png').convert_alpha()
-    o_img_raw = pygame.image.load('img/O.png').convert_alpha()
+    img_size = 50 
+    x_img_raw = pygame.image.load(resource_path('img/X.png')).convert_alpha()
+    o_img_raw = pygame.image.load(resource_path('img/O.png')).convert_alpha()
     x_img = pygame.transform.scale(x_img_raw, (img_size, img_size))
     o_img = pygame.transform.scale(o_img_raw, (img_size, img_size))
 

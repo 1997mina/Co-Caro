@@ -1,7 +1,7 @@
 import pygame
 import sys
-import os
 
+from utils.ResourcePath import resource_path
 from manager.SoundManager import SoundManager
 
 # Hằng số cho màu sắc và font chữ
@@ -22,7 +22,7 @@ def show_main_menu(screen):
     screen_width, screen_height = screen.get_size()
 
     # Tải hình nền
-    background_img = pygame.image.load(os.path.join('img', 'Background.jpg')).convert()
+    background_img = pygame.image.load(resource_path('img/Background.jpg')).convert()
     background_img = pygame.transform.scale(background_img, (screen_width, screen_height))
 
     # Thiết lập độ mờ cho ảnh nền
@@ -39,13 +39,13 @@ def show_main_menu(screen):
     # Tải và thay đổi kích thước hình ảnh cho các nút
     icon_size = 120
     
-    two_players_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'TwoPlayers.png')).convert_alpha()
+    two_players_icon = pygame.image.load(resource_path('img/mainmenu/TwoPlayers.png')).convert_alpha()
     two_players_icon = pygame.transform.scale(two_players_icon, (icon_size, icon_size))
     
-    vs_ai_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'vsAI.png')).convert_alpha()
+    vs_ai_icon = pygame.image.load(resource_path('img/mainmenu/vsAI.png')).convert_alpha()
     vs_ai_icon = pygame.transform.scale(vs_ai_icon, (icon_size, icon_size))
     
-    quit_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'Quit.png')).convert_alpha()
+    quit_icon = pygame.image.load(resource_path('img/mainmenu/Quit.png')).convert_alpha()
     quit_icon = pygame.transform.scale(quit_icon, (icon_size, icon_size))
 
     # Định nghĩa các nút biểu tượng

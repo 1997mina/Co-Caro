@@ -1,6 +1,8 @@
 import pygame
 import os
 
+from utils.ResourcePath import resource_path
+
 class SoundManager:
     """
     Lớp quản lý việc tải và phát các hiệu ứng âm thanh trong game.
@@ -25,7 +27,7 @@ class SoundManager:
         Hàm trợ giúp để tải một file âm thanh từ thư mục 'sfx'.
         Trả về một đối tượng Sound giả nếu không tìm thấy file.
         """
-        path = os.path.join('sound', filename)
+        path = resource_path(os.path.join('sound', filename))
         try:
             sound = pygame.mixer.Sound(path)
             sound.set_volume(volume)

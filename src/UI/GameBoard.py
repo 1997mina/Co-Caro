@@ -1,5 +1,6 @@
 import pygame
-import os
+
+from utils.ResourcePath import resource_path
 
 class GameBoard:
     def __init__(self, board_width_cells, board_height_cells, cell_size, screen_width, screen_height, player_names, info_panel_class):
@@ -12,9 +13,9 @@ class GameBoard:
         self.padding = int(self.cell_size * 0.1)
         img_size = self.cell_size - (2 * self.padding)
 
-        # Giả sử bạn có thư mục 'img' với file 'x.png' và 'o.png'
-        self.x_img = pygame.image.load(os.path.join('img', 'X.png')).convert_alpha()
-        self.o_img = pygame.image.load(os.path.join('img', 'O.png')).convert_alpha()
+        # Tải hình ảnh X và O sử dụng resource_path
+        self.x_img = pygame.image.load(resource_path('img/X.png')).convert_alpha()
+        self.o_img = pygame.image.load(resource_path('img/O.png')).convert_alpha()
         self.x_img_scaled = pygame.transform.scale(self.x_img, (img_size, img_size))
         self.o_img_scaled = pygame.transform.scale(self.o_img, (img_size, img_size))
 

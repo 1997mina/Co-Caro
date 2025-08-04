@@ -3,6 +3,7 @@ import os
 import sys
 
 from manager.SoundManager import SoundManager
+from utils.ResourcePath import resource_path
 
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
 BG_COLOR = (255, 255, 255)
@@ -31,14 +32,14 @@ def get_ai_game_settings(screen):
     font_mode = pygame.font.SysFont("Times New Roman", 28)
 
     # Tải hình nền
-    background_img = pygame.image.load(os.path.join('img', 'Background.jpg')).convert()
+    background_img = pygame.image.load(resource_path('img/Background.jpg')).convert()
     background_img = pygame.transform.scale(background_img, (screen_width, screen_height))
     background_img.set_alpha(50)
 
     # Tải và thay đổi kích thước hình ảnh X và O
     img_size = 80
-    x_img = pygame.transform.scale(pygame.image.load('img/X.png').convert_alpha(), (img_size, img_size))
-    o_img = pygame.transform.scale(pygame.image.load('img/O.png').convert_alpha(), (img_size, img_size))
+    x_img = pygame.transform.scale(pygame.image.load(resource_path('img/X.png')).convert_alpha(), (img_size, img_size))
+    o_img = pygame.transform.scale(pygame.image.load(resource_path('img/O.png')).convert_alpha(), (img_size, img_size))
 
     # --- Ô nhập tên người chơi ---
     input_box_width = 500

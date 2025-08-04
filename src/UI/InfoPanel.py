@@ -80,24 +80,30 @@ class InfoPanel:
         y_cursor_bottom = player_area.bottom - 5
 
         # 4. Vẽ bộ đếm thời gian
+        # Chỉ vẽ đồng hồ cho chế độ 'total_time' hoặc cho người chơi hiện tại trong chế độ 'turn_based'
         if time_mode == "total_time" or (time_mode == "turn_based" and is_current_player):
-            warning_threshold = 30 if time_mode == "total_time" else 10
-            
-            seconds = max(0, int(player_time))
-            minutes = seconds // 60
-            seconds_display = seconds % 60
-            timer_text = f"{minutes:01d}:{seconds_display:02d}"
+            timer_color = self.timer_color # Màu mặc định
 
-            if time_mode == "total_time" and not is_current_player:
-                timer_color = self.timer_inactive_color
+            if player_time == float('inf'):
+                timer_text = ""
             else:
-                timer_color = self.timer_warning_color if player_time < warning_threshold else self.timer_color
+                warning_threshold = 30 if time_mode == "total_time" else 10
+                
+                seconds = max(0, int(player_time))
+                minutes = seconds // 60
+                seconds_display = seconds % 60
+                timer_text = f"{minutes:01d}:{seconds_display:02d}"
+
+                if time_mode == "total_time" and not is_current_player:
+                    timer_color = self.timer_inactive_color
+                else:
+                    timer_color = self.timer_warning_color if player_time < warning_threshold else self.timer_color
 
             timer_surf = self.font_timer.render(timer_text, True, timer_color)
             timer_rect = timer_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
             screen.blit(timer_surf, timer_rect)
             y_cursor_bottom = timer_rect.top - 1
-        
+
         # 5. Thông báo lượt chơi
         if is_current_player:
             turn_surf = self.font_turn.render("Đến lượt!", True, self.text_color)

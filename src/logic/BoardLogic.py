@@ -54,3 +54,34 @@ class BoardLogic:
                 if board[r][c] == '':
                     return False
         return True
+
+    def get_empty_cells(self):
+        """Trả về danh sách tất cả các ô trống."""
+        empty_cells = []
+        for r in range(self.height):
+            for c in range(self.width):
+                if self.board[r][c] == '':
+                    empty_cells.append((r, c))
+        return empty_cells
+
+    def has_neighbor(self, r, c):
+        """Kiểm tra xem một ô có láng giềng (quân cờ) nào không."""
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if i == 0 and j == 0:
+                    continue
+                nr, nc = r + i, c + j
+                if 0 <= nr < self.height and 0 <= nc < self.width:
+                    if self.board[nr][nc] != '':
+                        return True
+        return False
+
+    def check_win_from_any_position(self, player):
+        """Kiểm tra xem người chơi đã thắng ở bất kỳ đâu trên bàn cờ chưa."""
+        # Đây là một hàm đơn giản, bạn có thể tối ưu hóa nó
+        for r in range(self.height):
+            for c in range(self.width):
+                if self.board[r][c] == player:
+                    if self.check_win(self.board, player, r, c):
+                        return True
+        return False

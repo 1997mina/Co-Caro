@@ -8,8 +8,8 @@ BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
 INPUT_BOX_COLOR_INACTIVE = (200, 200, 200)
 INPUT_BOX_COLOR_ACTIVE = (100, 100, 100)
-START_BUTTON_COLOR = (204, 0, 0)       # Màu đỏ cho nút Bắt đầu
-START_BUTTON_HOVER_COLOR = (230, 0, 0) # Màu đỏ sáng hơn khi di chuột
+START_BUTTON_COLOR = (0, 120, 215) # Màu xanh nước biển
+START_BUTTON_HOVER_COLOR = (0, 150, 255) # Màu xanh nước biển nhạt hơn khi hover
 START_BUTTON_DISABLED_COLOR = (180, 180, 180)
 DRAG_COLOR = (150, 150, 150)
 DRAG_HIGHLIGHT_COLOR = (100, 100, 100) # Màu highlight khi kéo vào ô thả
@@ -18,7 +18,7 @@ BACK_BUTTON_COLOR = (100, 100, 100) # Màu xám đậm cho nút Quay lại
 BACK_BUTTON_HOVER_COLOR = (130, 130, 130)
 BACK_BUTTON_TEXT_COLOR = (40, 40, 40) # Màu đen cho chữ nút Quay lại
 MODE_BUTTON_COLOR_INACTIVE = (220, 220, 220)
-MODE_BUTTON_COLOR_ACTIVE = (0, 150, 136)
+MODE_BUTTON_COLOR_ACTIVE = (0, 120, 215)
 
 def get_two_player_setting(screen):
     """

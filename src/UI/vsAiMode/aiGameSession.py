@@ -1,5 +1,5 @@
 import pygame
-import time
+import threading
 
 from logic.BoardLogic import BoardLogic
 from logic.aiLogic import AIPlayer
@@ -26,8 +26,8 @@ def start_ai_game_session(screen):
     player_name_from_input, human_player_char, first_turn = game_settings
 
     # Đặt giá trị mặc định cho thời gian vì màn hình cài đặt không có
-    time_mode = "total_time"
-    time_limit = 300 # 5 phút
+    time_mode = "turn_based" # Chỉ người chơi bị tính giờ
+    time_limit = 20 # 20 giây cho người chơi
 
     # Xác định quân cờ và tên của người chơi và AI
     ai_player_char = 'O' if human_player_char == 'X' else 'X'
@@ -63,12 +63,17 @@ def start_ai_game_session(screen):
 
     # --- Khởi tạo các trình quản lý ---
     sound_manager = SoundManager()
-    timer = TimerManager(time_limit, time_mode)
+    timer = TimerManager(time_limit, time_mode, ai_player=ai_player_char)
     game_state = GameStateManager(screen, board_rect)
     
     timer.switch_turn(current_player)
     winner = None
     winning_cells = []
+    
+    # Biến để quản lý luồng của AI
+    ai_is_thinking = False
+    ai_thread = None
+    ai_move_result = None
 
     running = True
     while running:
@@ -78,29 +83,44 @@ def start_ai_game_session(screen):
                 winner = 'O' if current_player == 'X' else 'X'
                 sound_manager.play_game_over()
 
-            # --- Lượt đi của AI ---
-            if current_player == ai_player_char:
-                pygame.time.wait(500) # Giả lập AI đang "suy nghĩ"
-                # Đồng bộ trạng thái bàn cờ từ UI sang logic trước khi AI tính toán
-                game_logic.board = board.board
-                move = ai.find_best_move(game_logic)
-                if move:
-                    row, col = move
-                    board.mark_square(row, col, current_player)
-                    sound_manager.play_move(current_player)
-                    
-                    winning_line = game_logic.check_win(board.board, current_player, row, col)
-                    if winning_line:
-                        winner = current_player
-                        game_state.set_game_over(True)
-                        sound_manager.play_game_over()
-                        winning_cells = winning_line
-                    elif game_logic.is_board_full(board.board):
-                        winner = "Draw"
-                        game_state.set_game_over(True)
-                    else:
-                        current_player = human_player_char
-                        timer.switch_turn(current_player)
+            # --- Xử lý lượt đi của AI (sử dụng thread) ---
+            # 1. Bắt đầu luồng tính toán nếu đến lượt AI và AI chưa "suy nghĩ"
+            if current_player == ai_player_char and not ai_is_thinking:
+                ai_is_thinking = True
+                # Đồng bộ bàn cờ trước khi đưa vào luồng
+                game_logic.board = [row[:] for row in board.board]
+                is_first_move = not any(any(row) for row in game_logic.board)
+                
+                # Hàm mục tiêu cho luồng AI
+                def run_ai_calculation():
+                    nonlocal ai_move_result
+                    ai_move_result = ai.find_best_move(game_logic, is_first_move)
+
+                ai_thread = threading.Thread(target=run_ai_calculation)
+                ai_thread.start()
+
+            # 2. Kiểm tra xem luồng AI đã tính toán xong chưa
+            if ai_is_thinking and ai_move_result is not None:
+                row, col = ai_move_result
+                board.mark_square(row, col, current_player)
+                sound_manager.play_move(current_player)
+                
+                winning_line = game_logic.check_win(board.board, current_player, row, col)
+                if winning_line:
+                    winner = current_player
+                    game_state.set_game_over(True)
+                    sound_manager.play_game_over()
+                    winning_cells = winning_line
+                elif game_logic.is_board_full(board.board):
+                    winner = "Draw"
+                    game_state.set_game_over(True)
+                else:
+                    current_player = human_player_char
+                    timer.switch_turn(current_player)
+                
+                # Reset trạng thái của AI
+                ai_is_thinking = False
+                ai_move_result = None
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -147,7 +167,7 @@ def start_ai_game_session(screen):
                 game_state.reset()
                 current_player = initial_player # Quay về người đi đầu của ván
                 winning_cells = []
-                timer = TimerManager(time_limit, time_mode)
+                timer = TimerManager(time_limit, time_mode, ai_player=ai_player_char)
                 timer.switch_turn(initial_player)
             else:
                 running = False # Thoát về menu chính

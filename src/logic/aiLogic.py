@@ -1,7 +1,8 @@
+import random
+
 class AIPlayer:
     """
     Lớp chứa logic để máy tính (AI) tìm ra nước đi tốt nhất.
-    Sử dụng thuật toán heuristic để đánh giá và chọn nước đi.
     """
     def __init__(self, ai_symbol, human_symbol, win_length=5):
         """
@@ -14,123 +15,148 @@ class AIPlayer:
         self.AI_SYMBOL = ai_symbol
         self.HUMAN_SYMBOL = human_symbol
         self.WIN_LENGTH = win_length
+        self.SEARCH_DEPTH = 1 # Với hàm đánh giá tối ưu, có thể tăng độ sâu để AI thông minh hơn
         # Bảng điểm cho các thế cờ
         self.SCORE_PATTERNS = {
-            'FIVE': 10000000,  # 5 quân liên tiếp -> Thắng
-            'LIVE_FOUR': 50000,    # 4 quân không bị chặn 2 đầu
-            'DEAD_FOUR': 400,      # 4 quân bị chặn 1 đầu
-            'LIVE_THREE': 200,     # 3 quân không bị chặn 2 đầu
-            'DEAD_THREE': 50,      # 3 quân bị chặn 1 đầu
-            'LIVE_TWO': 10,        # 2 quân không bị chặn 2 đầu
-            'DEAD_TWO': 5,         # 2 quân bị chặn 1 đầu
+            5: 10000000, # 5 quân -> Thắng chắc
+            4: 50000,    # 4 quân
+            3: 200,      # 3 quân
+            2: 10,       # 2 quân
+            1: 1         # 1 quân
         }
 
-    def find_best_move(self, board_logic):
+    def find_best_move(self, board_logic, is_first_move):
         """
         Tìm và trả về tọa độ (hàng, cột) của nước đi tốt nhất.
+        Sử dụng Minimax với cắt tỉa Alpha-Beta.
         Args:
             board_logic (BoardLogic): Đối tượng logic của bàn cờ, chứa trạng thái bàn cờ.
+            is_first_move (bool): True nếu đây là nước đi đầu tiên của ván cờ.
         Returns:
             tuple: Tọa độ (hàng, cột) của nước đi tốt nhất, hoặc None nếu không tìm thấy.
         """
+        # Nếu là nước đi đầu tiên, đặt ở gần trung tâm để có khởi đầu tốt
+        if is_first_move:
+            center_r, center_c = board_logic.height // 2, board_logic.width // 2
+            return (center_r, center_c)
+
         best_score = -float('inf')
         best_move = None
-        
-        # Duyệt qua tất cả các ô trên bàn cờ
-        for r in range(board_logic.height):
-            for c in range(board_logic.width):
-                # Nếu ô trống, xem xét đây là một nước đi tiềm năng
-                if board_logic.board[r][c] == '':
-                    # Tính điểm tấn công (nếu AI đi vào ô này)
-                    attack_score = self._calculate_score(board_logic, r, c, self.AI_SYMBOL)
-                    # Tính điểm phòng thủ (nếu người chơi đi vào ô này)
-                    defense_score = self._calculate_score(board_logic, r, c, self.HUMAN_SYMBOL)
-                    
-                    # Điểm tổng của nước đi là tổng của tấn công và phòng thủ
-                    # AI ưu tiên chặn nước đi mạnh của đối thủ cũng như tạo nước đi mạnh cho mình
-                    current_score = attack_score + defense_score
 
-                    if current_score > best_score:
-                        best_score = current_score
-                        best_move = (r, c)
-                        
+        possible_moves = self._get_possible_moves(board_logic)
+
+        for move in possible_moves:
+            r, c = move
+            board_logic.board[r][c] = self.AI_SYMBOL
+            score = self._minimax(board_logic, self.SEARCH_DEPTH, -float('inf'), float('inf'), False)
+            board_logic.board[r][c] = '' # Hoàn tác nước đi
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+            # Thêm một chút ngẫu nhiên nếu các nước đi có điểm số bằng nhau
+            elif score == best_score:
+                if random.choice([True, False]):
+                    best_move = move
+
         return best_move
 
-    def _calculate_score(self, board_logic, r, c, player_symbol):
-        """
-        Tính toán điểm số cho một nước đi tiềm năng tại (r, c) cho một người chơi.
-        Điểm số được tính bằng cách đánh giá các đường ngang, dọc, chéo đi qua ô này.
-        """
-        total_score = 0
-        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # Ngang, Dọc, Chéo chính, Chéo phụ
+    def _minimax(self, board_logic, depth, alpha, beta, is_maximizing_player):
+        """Thuật toán Minimax với cắt tỉa Alpha-Beta."""
+        if depth == 0 or board_logic.check_win_from_any_position(self.AI_SYMBOL) or board_logic.check_win_from_any_position(self.HUMAN_SYMBOL):
+            return self._evaluate_board(board_logic)
 
-        for dr, dc in directions:
-            line = []
-            # Lấy một đoạn các ô cờ xung quanh (r, c) theo một hướng
-            for i in range(-(self.WIN_LENGTH - 1), self.WIN_LENGTH):
-                nr, nc = r + i * dr, c + i * dc
-                if 0 <= nr < board_logic.height and 0 <= nc < board_logic.width:
-                    line.append(board_logic.board[nr][nc])
-                else:
-                    line.append('WALL') # 'WALL' đại diện cho việc ra ngoài bàn cờ
-            
-            # Đánh giá đoạn vừa lấy được
-            total_score += self._evaluate_line(line, player_symbol)
-            
-        return total_score
+        possible_moves = self._get_possible_moves(board_logic)
+        if not possible_moves: # Bàn cờ đầy
+            return 0
 
-    def _evaluate_line(self, line, player_symbol):
+        if is_maximizing_player: # Lượt của AI (Max)
+            max_eval = -float('inf')
+            for move in possible_moves:
+                r, c = move
+                board_logic.board[r][c] = self.AI_SYMBOL
+                evaluation = self._minimax(board_logic, depth - 1, alpha, beta, False)
+                board_logic.board[r][c] = ''
+                max_eval = max(max_eval, evaluation)
+                alpha = max(alpha, evaluation)
+                if beta <= alpha:
+                    break # Cắt tỉa Beta
+            return max_eval
+        else: # Lượt của người chơi (Min)
+            min_eval = float('inf')
+            for move in possible_moves:
+                r, c = move
+                board_logic.board[r][c] = self.HUMAN_SYMBOL
+                evaluation = self._minimax(board_logic, depth - 1, alpha, beta, True)
+                board_logic.board[r][c] = ''
+                min_eval = min(min_eval, evaluation)
+                beta = min(beta, evaluation)
+                if beta <= alpha:
+                    break # Cắt tỉa Alpha
+            return min_eval
+
+    def _evaluate_window(self, window):
         """
-        Đánh giá một đường (line) các ô cờ và trả về điểm số dựa trên các mẫu (pattern).
+        Đánh giá một "cửa sổ" (một đoạn 5 ô) và cho điểm.
+        Điểm dương cho AI, điểm âm cho người chơi.
         """
         score = 0
-        opponent_symbol = self.HUMAN_SYMBOL if player_symbol == self.AI_SYMBOL else self.AI_SYMBOL
+        ai_count = window.count(self.AI_SYMBOL)
+        human_count = window.count(self.HUMAN_SYMBOL)
+        empty_count = window.count('')
 
-        # Duyệt qua các cửa sổ có kích thước WIN_LENGTH (5) và WIN_LENGTH + 1 (6)
-        # Cửa sổ 6 ô để xác định "LIVE" (không bị chặn 2 đầu)
-        # Cửa sổ 5 ô để xác định "DEAD" (bị chặn 1 đầu)
+        # Nếu cửa sổ có cả quân của AI và người chơi -> không có tiềm năng -> 0 điểm
+        if ai_count > 0 and human_count > 0:
+            return 0
 
-        # --- Đánh giá các mẫu 4 quân ---
-        # Live Four: _XXXX_
-        for i in range(len(line) - 5):
-            window = line[i:i+6]
-            if window.count(player_symbol) == 4 and window.count('') == 2:
-                 if window[0] == '' and window[5] == '':
-                    score += self.SCORE_PATTERNS['LIVE_FOUR']
-
-        # --- Đánh giá các mẫu 3 quân ---
-        # Live Three: _XXX_
-        for i in range(len(line) - 4):
-            window = line[i:i+5]
-            if window.count(player_symbol) == 3 and window.count('') == 2:
-                if window[0] == '' and window[4] == '':
-                    score += self.SCORE_PATTERNS['LIVE_THREE']
-
-        # --- Đánh giá các mẫu 2 quân ---
-        # Live Two: _XX_
-        for i in range(len(line) - 3):
-            window = line[i:i+4]
-            if window.count(player_symbol) == 2 and window.count('') == 2:
-                if window[0] == '' and window[3] == '':
-                    score += self.SCORE_PATTERNS['LIVE_TWO']
-
-        # --- Đánh giá các mẫu bị chặn 1 đầu ---
-        for i in range(len(line) - 4):
-            window = line[i:i+5]
-            # Dead Four: OXXXX_ hoặc _XXXXO
-            if window.count(player_symbol) == 4 and window.count('') == 1:
-                score += self.SCORE_PATTERNS['DEAD_FOUR']
-            # Dead Three: OXXX_ hoặc _XXXO
-            if window.count(player_symbol) == 3 and window.count('') == 1 and window.count(opponent_symbol) == 1:
-                score += self.SCORE_PATTERNS['DEAD_THREE']
-            # Dead Two: OXX_ hoặc _XXO
-            if window.count(player_symbol) == 2 and window.count('') == 1 and window.count(opponent_symbol) == 1:
-                score += self.SCORE_PATTERNS['DEAD_TWO']
-
-        # --- Đánh giá trường hợp thắng ---
-        for i in range(len(line) - (self.WIN_LENGTH - 1)):
-            window = line[i:i+self.WIN_LENGTH]
-            if window.count(player_symbol) == self.WIN_LENGTH:
-                score += self.SCORE_PATTERNS['FIVE']
+        if ai_count > 0: # Cửa sổ tấn công của AI
+            score = self.SCORE_PATTERNS.get(ai_count, 0)
+        elif human_count > 0: # Cửa sổ phòng thủ (chặn người chơi)
+            # Điểm phòng thủ thường được ưu tiên hơn một chút so với tấn công
+            score = -self.SCORE_PATTERNS.get(human_count, 0) * 1.1
 
         return score
+
+    def _evaluate_board(self, board_logic):
+        """
+        Đánh giá toàn bộ bàn cờ một cách hiệu quả.
+        Điểm dương là lợi thế cho AI, điểm âm là lợi thế cho người chơi.
+        """
+        total_score = 0
+        board = board_logic.board
+        height, width = board_logic.height, board_logic.width
+
+        # Duyệt qua tất cả các cửa sổ có thể có trên bàn cờ
+        for r in range(board_logic.height):
+            for c in range(board_logic.width):
+                # Cửa sổ ngang
+                if c <= width - self.WIN_LENGTH:
+                    window = [board[r][c+i] for i in range(self.WIN_LENGTH)]
+                    total_score += self._evaluate_window(window)
+                # Cửa sổ dọc
+                if r <= height - self.WIN_LENGTH:
+                    window = [board[r+i][c] for i in range(self.WIN_LENGTH)]
+                    total_score += self._evaluate_window(window)
+                # Cửa sổ chéo xuôi (\)
+                if r <= height - self.WIN_LENGTH and c <= width - self.WIN_LENGTH:
+                    window = [board[r+i][c+i] for i in range(self.WIN_LENGTH)]
+                    total_score += self._evaluate_window(window)
+                # Cửa sổ chéo ngược (/)
+                if r <= height - self.WIN_LENGTH and c >= self.WIN_LENGTH - 1:
+                    window = [board[r+i][c-i] for i in range(self.WIN_LENGTH)]
+                    total_score += self._evaluate_window(window)
+        return total_score
+
+    def _get_possible_moves(self, board_logic):
+        """
+        Lấy danh sách các nước đi hợp lệ.
+        Tối ưu: chỉ xem xét các ô trống gần các quân cờ đã có.
+        """
+        possible_moves = []
+        for r in range(board_logic.height):
+            for c in range(board_logic.width):
+                if board_logic.board[r][c] == '':
+                    # Chỉ xét các ô có lân cận đã được đánh
+                    if board_logic.has_neighbor(r, c):
+                        possible_moves.append((r, c))
+        return possible_moves if possible_moves else board_logic.get_empty_cells()

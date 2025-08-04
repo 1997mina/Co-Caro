@@ -5,6 +5,7 @@ import sys
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
 BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
+VS_AI_COLOR = (255, 193, 7)
 START_BUTTON_COLOR = (204, 0, 0)
 START_BUTTON_HOVER_COLOR = (230, 0, 0)
 INPUT_BOX_COLOR_INACTIVE = (200, 200, 200)
@@ -13,10 +14,8 @@ START_BUTTON_DISABLED_COLOR = (180, 180, 180)
 BUTTON_TEXT_COLOR = (255, 255, 255)
 BACK_BUTTON_COLOR = (100, 100, 100)
 BACK_BUTTON_HOVER_COLOR = (130, 130, 130)
-MODE_BUTTON_COLOR_ACTIVE = (0, 150, 136)
 PIECE_BG_COLOR = (220, 220, 220)
 PIECE_BG_HOVER_COLOR = (200, 200, 200)
-PIECE_BG_SELECTED_COLOR = (0, 150, 136)
 
 def get_ai_game_settings(screen):
     """
@@ -127,11 +126,11 @@ def get_ai_game_settings(screen):
         piece_label_surf = font_label.render("Chọn quân cờ của bạn:", True, TEXT_COLOR)
         screen.blit(piece_label_surf, piece_label_surf.get_rect(center=(screen_width / 2, 200)))
         # Nút X
-        x_bg_color = PIECE_BG_SELECTED_COLOR if player_piece == 'X' else (PIECE_BG_HOVER_COLOR if x_button_rect.collidepoint(mouse_pos) else PIECE_BG_COLOR)
+        x_bg_color = VS_AI_COLOR if player_piece == 'X' else (PIECE_BG_HOVER_COLOR if x_button_rect.collidepoint(mouse_pos) else PIECE_BG_COLOR)
         pygame.draw.rect(screen, x_bg_color, x_button_rect, border_radius=15)
         screen.blit(x_img, x_img.get_rect(center=x_button_rect.center))
         # Nút O
-        o_bg_color = PIECE_BG_SELECTED_COLOR if player_piece == 'O' else (PIECE_BG_HOVER_COLOR if o_button_rect.collidepoint(mouse_pos) else PIECE_BG_COLOR)
+        o_bg_color = VS_AI_COLOR if player_piece == 'O' else (PIECE_BG_HOVER_COLOR if o_button_rect.collidepoint(mouse_pos) else PIECE_BG_COLOR)
         pygame.draw.rect(screen, o_bg_color, o_button_rect, border_radius=15)
         screen.blit(o_img, o_img.get_rect(center=o_button_rect.center))
 
@@ -146,13 +145,13 @@ def get_ai_game_settings(screen):
         # Lựa chọn "Bạn đi trước"
         pygame.draw.circle(screen, TEXT_COLOR, (radio_x_player, radio_y), radio_button_radius, 2)
         if first_turn == 'player':
-            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x_player, radio_y), radio_button_radius - 4)
+            pygame.draw.circle(screen, VS_AI_COLOR, (radio_x_player, radio_y), radio_button_radius - 4)
         player_text = font_mode.render("Bạn đi trước", True, TEXT_COLOR)
         screen.blit(player_text, (radio_x_player + text_x_offset, radio_y - player_text.get_height() / 2))
         # Lựa chọn "Máy đi trước"
         pygame.draw.circle(screen, TEXT_COLOR, (radio_x_ai, radio_y), radio_button_radius, 2)
         if first_turn == 'ai':
-            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x_ai, radio_y), radio_button_radius - 4)
+            pygame.draw.circle(screen, VS_AI_COLOR, (radio_x_ai, radio_y), radio_button_radius - 4)
         ai_text = font_mode.render("Máy đi trước", True, TEXT_COLOR)
         screen.blit(ai_text, (radio_x_ai + text_x_offset, radio_y - ai_text.get_height() / 2))
 

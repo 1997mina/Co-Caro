@@ -5,15 +5,23 @@ class TimerManager:
     Lớp quản lý bộ đếm thời gian cho cả ván đấu.
     Hỗ trợ chế độ "theo lượt" (turn_based) và "tổng thời gian" (total_time).
     """
-    def __init__(self, time_limit, mode):
+    def __init__(self, time_limit, mode, ai_player=None):
         """
         Khởi tạo bộ đếm.
-        :param time_limit: Giới hạn thời gian (giây).
-        :param mode: Chế độ chơi ("turn_based" hoặc "total_time").
+        :param time_limit: Giới hạn thời gian (giây). Có thể là None.
+        :param mode: Chế độ chơi ("turn_based", "total_time", hoặc None để không giới hạn).
+        :param ai_player: Quân cờ của AI ('X' hoặc 'O'), nếu có. AI sẽ không bị giới hạn thời gian.
         """
+        self.ai_player = ai_player
         self.mode = mode
-        self.turn_time_limit = time_limit if mode == "turn_based" else float('inf')
-        self.total_times = {'X': time_limit, 'O': time_limit}
+        if mode is None:
+            # Chế độ không giới hạn thời gian
+            self.turn_time_limit = float('inf')
+            self.total_times = {'X': float('inf'), 'O': float('inf')}
+        else:
+            self.turn_time_limit = time_limit if mode == "turn_based" else float('inf')
+            self.total_times = {'X': time_limit, 'O': time_limit}
+
         self.current_player = None
         self.turn_start_time = 0
         self.paused = False
@@ -48,6 +56,9 @@ class TimerManager:
         Lấy thời gian còn lại cho một người chơi cụ thể.
         :return: Thời gian còn lại (giây).
         """
+        if player == self.ai_player:
+            return float('inf')
+
         if self.paused: # Nếu đang tạm dừng, trả về thời gian tại thời điểm tạm dừng
             return self.get_time_at_tick(self.pause_start_time, player)
         if self.mode == "turn_based":
@@ -65,6 +76,9 @@ class TimerManager:
 
     def get_time_at_tick(self, tick, player):
         """Tính toán thời gian còn lại tại một mốc tick cụ thể (dùng cho lúc tạm dừng)."""
+        if player == self.ai_player:
+            return float('inf')
+
         if self.mode == "turn_based":
             if player == self.current_player:
                 elapsed_seconds = (tick - self.turn_start_time) / 1000
@@ -79,4 +93,6 @@ class TimerManager:
 
     def is_time_up(self):
         """Kiểm tra xem người chơi hiện tại đã hết giờ chưa."""
+        if self.current_player == self.ai_player:
+            return False # AI không bao giờ hết giờ
         return self.get_remaining_time(self.current_player) <= 0

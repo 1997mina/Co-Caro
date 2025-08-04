@@ -3,11 +3,14 @@ import sys
 import os
 
 # Hằng số cho màu sắc và font chữ
+TEXT_COLOR = (30, 30, 30)
 TITLE_COLOR = (40, 40, 40)
-BUTTON_COLOR = (0, 150, 136)
-BUTTON_HOVER_COLOR = (0, 180, 160)
-BUTTON_DISABLED_COLOR = (150, 150, 150)
-BUTTON_TEXT_COLOR = (255, 255, 255)
+TWO_PLAYERS_COLOR = (0, 120, 215) # Màu xanh nước biển
+TWO_PLAYERS_HOVER_COLOR = (0, 150, 255) # Màu xanh nước biển nhạt hơn khi hover
+VS_AI_BUTTON_COLOR = (255, 193, 7) # Màu vàng
+VS_AI_HOVER_COLOR = (255, 213, 79) # Màu vàng nhạt hơn khi hover
+QUIT_BUTTON_COLOR = (255, 100, 100) # Màu đỏ nhạt
+QUIT_HOVER_COLOR = (255, 120, 120)
 BG_COLOR = (240, 240, 240)
 
 def show_main_menu(screen):
@@ -24,37 +27,58 @@ def show_main_menu(screen):
     background_img.set_alpha(50)
 
     # Fonts
-    font_title = pygame.font.SysFont("Times New Roman", 96, bold=True)
-    font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)
+    font_title = pygame.font.SysFont("Times New Roman", 90, bold=True)
+    font_button_text = pygame.font.SysFont("Times New Roman", 36, bold=True)
 
     # Tiêu đề game
     title_surf = font_title.render("Cờ Caro", True, TITLE_COLOR)
-    title_rect = title_surf.get_rect(center=(screen_width / 2, screen_height / 4))
+    title_rect = title_surf.get_rect(center=(screen_width / 2, screen_height / 4 - 50))
 
-    # Định nghĩa các nút
-    button_width, button_height = 400, 70
-    button_y_start = screen_height / 2 - 50
-    button_spacing = 90
+    # Tải và thay đổi kích thước hình ảnh cho các nút
+    icon_size = 120
+    
+    two_players_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'TwoPlayers.png')).convert_alpha()
+    two_players_icon = pygame.transform.scale(two_players_icon, (icon_size, icon_size))
+    
+    vs_ai_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'vsAI.png')).convert_alpha()
+    vs_ai_icon = pygame.transform.scale(vs_ai_icon, (icon_size, icon_size))
+    
+    quit_icon = pygame.image.load(os.path.join('img', 'mainmenu', 'Quit.png')).convert_alpha()
+    quit_icon = pygame.transform.scale(quit_icon, (icon_size, icon_size))
 
-    two_players_button = pygame.Rect(0, 0, button_width, button_height)
-    two_players_button.center = (screen_width / 2, button_y_start)
+    # Định nghĩa các nút biểu tượng
+    button_width = icon_size + 40 # Tăng kích thước nút để có thêm padding
+    button_height = icon_size + 40
+    button_spacing = 120 # Khoảng cách giữa các nút
 
-    vs_ai_button = pygame.Rect(0, 0, button_width, button_height)
-    vs_ai_button.center = (screen_width / 2, button_y_start + button_spacing)
+    button_total_width = (button_width * 3) + (button_spacing * 2)
+    start_x = (screen_width - button_total_width) / 2
+    button_y = screen_height / 2 - 60
 
-    quit_button = pygame.Rect(0, 0, button_width, button_height)
-    quit_button.center = (screen_width / 2, button_y_start + 2 * button_spacing)
+    two_players_button_rect = pygame.Rect(start_x, button_y, button_width, button_height)
+    vs_ai_button_rect = pygame.Rect(start_x + button_width + button_spacing, button_y, button_width, button_height)
+    quit_button_rect = pygame.Rect(start_x + 2 * (button_width + button_spacing), button_y, button_width, button_height)
 
-    # Lưu thông tin các nút vào một dictionary để dễ quản lý
+    # Lưu thông tin các nút vào một dictionary để dễ quản lý, bao gồm cả icon
     buttons = {
-        '2_players': {'rect': two_players_button, 'text': 'Chơi 2 người', 'enabled': True},
-        'vs_ai': {'rect': vs_ai_button, 'text': 'Chơi với máy', 'enabled': True},
-        'quit': {'rect': quit_button, 'text': 'Thoát Game', 'enabled': True}
+        '2_players': {'rect': two_players_button_rect, 'text': 'Chơi 2 người', 'icon': two_players_icon, 'enabled': True},
+        'vs_ai': {'rect': vs_ai_button_rect, 'text': 'Chơi với máy', 'icon': vs_ai_icon, 'enabled': True},
+        'quit': {'rect': quit_button_rect, 'text': 'Thoát Game', 'icon': quit_icon, 'enabled': True}
     }
 
     # Vòng lặp chính của menu
     while True:
         mouse_pos = pygame.mouse.get_pos()
+
+        # Thay đổi con trỏ chuột khi di chuột qua các nút
+        cursor_changed = False
+        for action, button_info in buttons.items():
+            if button_info['rect'].collidepoint(mouse_pos) and button_info['enabled']:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+                cursor_changed = True
+                break
+        if not cursor_changed:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -68,16 +92,6 @@ def show_main_menu(screen):
                             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                             return action  # Trả về hành động được chọn
 
-        # Thay đổi con trỏ chuột khi di chuột qua các nút
-        cursor_changed = False
-        for action, button_info in buttons.items():
-            if button_info['rect'].collidepoint(mouse_pos) and button_info['enabled']:
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-                cursor_changed = True
-                break
-        if not cursor_changed:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-
         # Vẽ các thành phần lên màn hình
         screen.fill(BG_COLOR)
         screen.blit(background_img, (0, 0)) # Vẽ hình nền
@@ -86,19 +100,31 @@ def show_main_menu(screen):
         for action, button_info in buttons.items():
             rect = button_info['rect']
             text = button_info['text']
+            icon = button_info['icon']
             enabled = button_info['enabled']
 
             # Chọn màu dựa trên trạng thái của nút (thường, hover, vô hiệu hóa)
-            if not enabled:
-                color = BUTTON_DISABLED_COLOR
-            elif rect.collidepoint(mouse_pos):
-                color = BUTTON_HOVER_COLOR
+            if rect.collidepoint(mouse_pos) and enabled:
+                if action == 'quit':
+                    color = QUIT_HOVER_COLOR # Màu đỏ nhạt hơn khi hover
+                elif action == 'vs_ai':
+                    color = VS_AI_HOVER_COLOR # Màu vàng nhạt hơn khi hover
+                else:
+                    color = TWO_PLAYERS_HOVER_COLOR
             else:
-                color = BUTTON_COLOR
+                if action == 'quit':
+                    color = QUIT_BUTTON_COLOR
+                elif action == 'vs_ai':
+                    color = VS_AI_BUTTON_COLOR # Màu vàng cho nút AI
+                else:
+                    color = TWO_PLAYERS_COLOR
 
-            pygame.draw.rect(screen, color, rect, border_radius=15)
-            text_surf = font_button.render(text, True, BUTTON_TEXT_COLOR)
-            text_rect = text_surf.get_rect(center=rect.center)
+            # Vẽ nền nút
+            pygame.draw.rect(screen, color, rect, border_radius=15) # Tăng border_radius cho nút lớn hơn
+            screen.blit(icon, icon.get_rect(center=rect.center))
+
+            text_surf = font_button_text.render(text, True, TEXT_COLOR)
+            text_rect = text_surf.get_rect(center=(rect.centerx, rect.bottom + 45))
             screen.blit(text_surf, text_rect)
 
         pygame.display.flip()

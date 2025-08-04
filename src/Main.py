@@ -1,5 +1,6 @@
 import pygame
 import sys
+import os
 
 from ui.twoplayermode.TwoPlayerGameSession import start_two_players_session
 from ui.MainMenu import show_main_menu
@@ -10,6 +11,10 @@ if __name__ == '__main__':
     Hàm chính của ứng dụng. Khởi tạo Pygame, hiển thị menu chính,
     và điều khiển luồng chính của game.
     """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    os.chdir(project_root)
+
     pygame.init()
 
     # Screen dimensions

@@ -2,6 +2,8 @@ import pygame
 import sys
 import os
 
+from manager.SoundManager import SoundManager
+
 # Hằng số cho màu sắc và font chữ
 TEXT_COLOR = (30, 30, 30)
 TITLE_COLOR = (40, 40, 40)
@@ -66,6 +68,8 @@ def show_main_menu(screen):
         'quit': {'rect': quit_button_rect, 'text': 'Thoát Game', 'icon': quit_icon, 'enabled': True}
     }
 
+    sound_manager = SoundManager()
+
     # Vòng lặp chính của menu
     while True:
         mouse_pos = pygame.mouse.get_pos()
@@ -88,6 +92,8 @@ def show_main_menu(screen):
                 if event.button == 1:  # Click chuột trái
                     for action, button_info in buttons.items():
                         if button_info['rect'].collidepoint(mouse_pos) and button_info['enabled']:
+                            sound_manager.play_button_click()
+                            pygame.time.wait(100) # Đợi một chút để âm thanh phát
                             # Khôi phục con trỏ chuột về mặc định trước khi thoát khỏi menu
                             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                             return action  # Trả về hành động được chọn

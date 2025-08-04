@@ -1,5 +1,7 @@
 import pygame
 
+from manager.SoundManager import SoundManager
+
 # Hằng số cho màu sắc và font chữ
 BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
@@ -35,6 +37,8 @@ def show_end_screen(screen, winner_name, board_rect):
     quit_button = pygame.Rect(0, 0, button_width, button_height)
     quit_button.center = (board_rect.centerx, board_rect.centery + 80)
 
+    sound_manager = SoundManager()
+
     # Vòng lặp riêng cho màn hình kết thúc
     while True:
         for event in pygame.event.get():
@@ -43,8 +47,12 @@ def show_end_screen(screen, winner_name, board_rect):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_again_button.collidepoint(event.pos):
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     return True  # Chơi lại
                 if quit_button.collidepoint(event.pos):
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     return False  # Thoát
 
         # Vẽ lại nền gốc và lớp phủ chỉ trên bàn cờ

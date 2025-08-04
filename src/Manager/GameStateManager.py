@@ -6,10 +6,11 @@ class GameStateManager:
     Quản lý các trạng thái chính của game như: đang chạy, tạm dừng, kết thúc.
     Sử dụng một PauseHandler để quản lý logic tạm dừng.
     """
-    def __init__(self, screen, board_rect):
+    def __init__(self, screen, board_rect, sound_manager):
         self.game_over = False
         # Khởi tạo trình xử lý tạm dừng, ủy quyền các tác vụ liên quan cho nó
         self.pause_handler = PauseHandler(screen, board_rect)
+        self.sound_manager = sound_manager
 
     def is_playing(self):
         """Kiểm tra xem game có đang trong trạng thái chơi được không."""
@@ -34,6 +35,7 @@ class GameStateManager:
         if not self.game_over:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if board.player_info_panel.pause_button_rect.collidepoint(event.pos):
+                    self.sound_manager.play_button_click()
                     self.toggle_pause(timer)
                     return True # Sự kiện đã được xử lý
         return False # Sự kiện chưa được xử lý

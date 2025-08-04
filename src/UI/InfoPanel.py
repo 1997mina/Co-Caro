@@ -105,8 +105,13 @@ class InfoPanel:
             y_cursor_bottom = timer_rect.top - 1
 
         # 5. Thông báo lượt chơi
-        if is_current_player:
-            turn_surf = self.font_turn.render("Đến lượt!", True, self.text_color)
+        if is_current_player: # Kiểm tra xem đây có phải là người chơi hiện tại không
+            # Kiểm tra nếu tên người chơi là "Máy tính" thì hiển thị thông báo khác
+            if player_name == "Máy tính":
+                turn_surf = self.font_turn.render("Máy đang suy nghĩ...", True, self.text_color)
+            else:
+                turn_surf = self.font_turn.render("Đến lượt bạn!", True, self.text_color)
+
             turn_rect = turn_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
             screen.blit(turn_surf, turn_rect)
 
@@ -118,7 +123,7 @@ class InfoPanel:
         margin_from_center = 10
         divider_y = self.rect.centery - 60
         
-        # --- Khu vực người chơi 1 ('X') ---
+        # --- Khu vực người chơi 1 ---
         p1_y = divider_y - margin_from_center - area_height
         p1_area = pygame.Rect(self.rect.x + 10, divider_y - margin_from_center - area_height, area_width, area_height)
         self._draw_player_info(screen, 'X', self.player_names['X'], remaining_times['X'], current_player == 'X', time_mode, p1_area)
@@ -126,7 +131,7 @@ class InfoPanel:
         # --- Vẽ đường phân cách ---
         pygame.draw.line(screen, self.divider_color, (self.rect.x + 20, divider_y), (self.rect.right - 20, divider_y), 2)
 
-        # --- Khu vực người chơi 2 ('O') ---
+        # --- Khu vực người chơi 2 ---
         p2_y = divider_y + margin_from_center
         p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height)
         self._draw_player_info(screen, 'O', self.player_names['O'], remaining_times['O'], current_player == 'O', time_mode, p2_area)

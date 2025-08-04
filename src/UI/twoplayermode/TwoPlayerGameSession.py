@@ -45,17 +45,18 @@ def start_two_players_session(screen):
     # --- Khởi tạo các trình quản lý ---
     current_player = 'X'
     winning_cells = [] # Lưu tọa độ các ô thắng
+    last_move = None # Lưu tọa độ nước đi cuối cùng
 
     # --- Khởi tạo trình quản lý âm thanh ---
     sound_manager = SoundManager()
 
+    # --- Khởi tạo trình quản lý trạng thái game ---
+    game_state = GameStateManager(screen, board_rect, sound_manager)
+    winner = None
+
     # --- Khởi tạo bộ đếm thời gian ---
     timer = TimerManager(time_limit, time_mode)
     timer.switch_turn(current_player)
-    
-    # --- Khởi tạo trình quản lý trạng thái game ---
-    game_state = GameStateManager(screen, board_rect)
-    winner = None
 
     running = True
     while running:
@@ -87,6 +88,7 @@ def start_two_players_session(screen):
                         clicked_col = (mouseX - panel_actual_width) // cell_size
                         if board.mark_square(clicked_row, clicked_col, current_player):
                             sound_manager.play_move(current_player)
+                            last_move = (clicked_row, clicked_col) # Lưu nước đi cuối cùng
                             # Kiểm tra thắng
                             winning_line = game_logic.check_win(board.board, current_player, clicked_row, clicked_col)
                             if winning_line:
@@ -107,7 +109,7 @@ def start_two_players_session(screen):
         screen.fill((255, 255, 255))
         # Lấy thời gian còn lại của cả hai người chơi để hiển thị
         remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
-        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells)
+        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells, last_move)
 
         # Vẽ màn hình overlay nếu game đang tạm dừng
         game_state.draw_overlay()
@@ -127,6 +129,7 @@ def start_two_players_session(screen):
                 board.reset()
                 game_state.reset()
                 current_player = 'X'
+                last_move = None
                 winning_cells = [] # Xóa các ô thắng của ván trước
                 timer = TimerManager(time_limit, time_mode) # Reset timer cho game mới
                 timer.switch_turn(current_player)

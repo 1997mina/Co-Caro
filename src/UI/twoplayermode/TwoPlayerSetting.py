@@ -1,6 +1,7 @@
 import pygame
 import os
 
+from manager.SoundManager import SoundManager
 from handler.PieceDragHandler import PieceDragHandler
 
 # Hằng số cho màu sắc và font chữ
@@ -86,6 +87,8 @@ def get_two_player_setting(screen):
 
     # Nút Quay lại
     back_button = pygame.Rect(screen_width / 2 - 50 - button_width, 700, button_width, button_height)
+
+    sound_manager = SoundManager()
     game_running = True
     while game_running:
         mouse_pos = pygame.mouse.get_pos()
@@ -107,10 +110,16 @@ def get_two_player_setting(screen):
                 elif input_box2.collidepoint(event.pos):
                     active_box = 2
                 elif radio_turn_based_rect.collidepoint(event.pos):
+                    if selected_mode != "turn_based":
+                        sound_manager.play_button_click()
                     selected_mode = "turn_based"
                 elif radio_total_time_rect.collidepoint(event.pos):
+                    if selected_mode != "total_time":
+                        sound_manager.play_button_click()
                     selected_mode = "total_time"
                 elif start_button.collidepoint(event.pos) and is_start_enabled:
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
                     # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
                     if drag_handler.player1_piece == 'X':
@@ -119,6 +128,8 @@ def get_two_player_setting(screen):
                         return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
 
                 elif back_button.collidepoint(event.pos):
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
                     return None # Quay lại menu chính
                 else:

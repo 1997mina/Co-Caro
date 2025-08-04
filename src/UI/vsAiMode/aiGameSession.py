@@ -63,12 +63,13 @@ def start_ai_game_session(screen):
 
     # --- Khởi tạo các trình quản lý ---
     sound_manager = SoundManager()
+    game_state = GameStateManager(screen, board_rect, sound_manager)
     timer = TimerManager(time_limit, time_mode, ai_player=ai_player_char)
-    game_state = GameStateManager(screen, board_rect)
     
     timer.switch_turn(current_player)
     winner = None
     winning_cells = []
+    last_move = None # Lưu tọa độ nước đi cuối cùng
     
     # Biến để quản lý luồng của AI
     ai_is_thinking = False
@@ -102,6 +103,7 @@ def start_ai_game_session(screen):
             # 2. Kiểm tra xem luồng AI đã tính toán xong chưa
             if ai_is_thinking and ai_move_result is not None:
                 row, col = ai_move_result
+                last_move = (row, col) # Lưu nước đi của AI
                 board.mark_square(row, col, current_player)
                 sound_manager.play_move(current_player)
                 
@@ -138,6 +140,7 @@ def start_ai_game_session(screen):
                         clicked_row = mouseY // cell_size
                         clicked_col = (mouseX - panel_actual_width) // cell_size
                         if board.mark_square(clicked_row, clicked_col, current_player):
+                            last_move = (clicked_row, clicked_col) # Lưu nước đi của người chơi
                             sound_manager.play_move(current_player)
                             winning_line = game_logic.check_win(board.board, current_player, clicked_row, clicked_col)
                             if winning_line:
@@ -155,7 +158,7 @@ def start_ai_game_session(screen):
         # --- Vẽ màn hình ---
         screen.fill((255, 255, 255))
         remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
-        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells)
+        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells, last_move)
         game_state.draw_overlay()
 
         if game_state.game_over:
@@ -166,6 +169,7 @@ def start_ai_game_session(screen):
                 board.reset()
                 game_state.reset()
                 current_player = initial_player # Quay về người đi đầu của ván
+                last_move = None
                 winning_cells = []
                 timer = TimerManager(time_limit, time_mode, ai_player=ai_player_char)
                 timer.switch_turn(initial_player)

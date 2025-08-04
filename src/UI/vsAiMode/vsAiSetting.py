@@ -2,6 +2,8 @@ import pygame
 import os
 import sys
 
+from manager.SoundManager import SoundManager
+
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
 BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
@@ -63,6 +65,8 @@ def get_ai_game_settings(screen):
     start_button = pygame.Rect(screen_width / 2 + 50, 650, button_width, button_height)
     back_button = pygame.Rect(screen_width / 2 - 50 - button_width, 650, button_width, button_height)
 
+    sound_manager = SoundManager()
+
     running = True
     while running:
         mouse_pos = pygame.mouse.get_pos() # Cập nhật vị trí chuột mỗi vòng lặp
@@ -78,17 +82,25 @@ def get_ai_game_settings(screen):
                 else:
                     active_box = False
                 if x_button_rect.collidepoint(mouse_pos):
+                    if player_piece != 'X': sound_manager.play_button_click()
                     player_piece = 'X'
                 elif o_button_rect.collidepoint(mouse_pos):
+                    if player_piece != 'O': sound_manager.play_button_click()
                     player_piece = 'O'
                 elif radio_player_first_rect.collidepoint(mouse_pos):
+                    if first_turn != 'player': sound_manager.play_button_click()
                     first_turn = 'player'
                 elif radio_ai_first_rect.collidepoint(mouse_pos):
+                    if first_turn != 'ai': sound_manager.play_button_click()
                     first_turn = 'ai'
                 elif start_button.collidepoint(mouse_pos) and is_start_enabled:
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                     return player_name.strip(), player_piece, first_turn
                 elif back_button.collidepoint(mouse_pos):
+                    sound_manager.play_button_click()
+                    pygame.time.wait(100)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                     return None
             if event.type == pygame.KEYDOWN:

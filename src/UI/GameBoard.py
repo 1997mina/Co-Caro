@@ -38,13 +38,20 @@ class GameBoard:
         """Xóa toàn bộ bàn cờ để bắt đầu ván mới."""
         self.board = [['' for _ in range(self.board_width_cells)] for _ in range(self.board_height_cells)]
 
-    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None):
+    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None):
         """Vẽ bàn cờ và các quân cờ X, O."""
         # Vẽ PlayerInfoPanel
         self.player_info_panel.draw(screen, current_player, remaining_times, time_mode, paused)
 
         # Vẽ bàn cờ (dịch sang phải panel_width)
         board_offset_x = self.player_info_panel.rect.width
+
+        # Vẽ highlight cho nước đi gần nhất (vẽ nền trước)
+        if last_move:
+            r, c = last_move
+            highlight_rect = pygame.Rect(board_offset_x + c * self.cell_size, r * self.cell_size, self.cell_size, self.cell_size)
+            pygame.draw.rect(screen, (180, 180, 180), highlight_rect) # Màu xám đậm hơn
+
         for row in range(self.board_height_cells):
             for col in range(self.board_width_cells):
                 rect = pygame.Rect(board_offset_x + col * self.cell_size, row * self.cell_size, self.cell_size, self.cell_size)

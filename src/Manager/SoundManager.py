@@ -16,7 +16,8 @@ class SoundManager:
         self.sounds = {
             'move_X': self._load_sound('MoveX.mp3', volume=0.7),
             'move_O': self._load_sound('MoveO.mp3', volume=0.7),
-            'game_over': self._load_sound('GameOver.mp3', volume=0.8)
+            'game_over': self._load_sound('GameOver.mp3', volume=0.8),
+            'button_click': self._load_sound('ButtonClick.mp3', volume=0.6)
         }
 
     def _load_sound(self, filename, volume=1.0):
@@ -41,3 +42,7 @@ class SoundManager:
     def play_game_over(self):
         """Phát âm thanh khi hết giờ."""
         self.sounds['game_over'].play()
+
+    def play_button_click(self):
+        """Phát âm thanh khi nhấn nút."""
+        self.sounds['button_click'].play()

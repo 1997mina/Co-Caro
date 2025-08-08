@@ -4,7 +4,7 @@ from logic.BoardLogic import BoardLogic
 from manager.GameStateManager import GameStateManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
-from ui.EndScreen import show_end_screen
+from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog
 from ui.GameBoard import GameBoard
 from ui.twoplayermode.TwoPlayerSetting import get_two_player_setting
 from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
@@ -76,6 +76,13 @@ def start_two_players_session(screen):
             # Ưu tiên xử lý sự kiện của game state (như nút pause)
             if game_state.handle_event(event, timer, board):
                 continue # Nếu sự kiện đã được xử lý, bỏ qua phần còn lại
+
+            # Xử lý nhấn phím ESC để thoát game
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if not game_state.game_over: # Chỉ hiển thị dialog khi game chưa kết thúc
+                    if show_quit_confirmation_dialog(screen, board_rect):
+                        running = False # Đặt cờ để thoát vòng lặp game
+                        continue
 
             # Chỉ xử lý logic game nếu game đang chạy
             if game_state.is_playing():

@@ -6,7 +6,7 @@ from logic.aiLogic import AIPlayer
 from manager.GameStateManager import GameStateManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
-from ui.EndScreen import show_end_screen
+from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog
 from ui.GameBoard import GameBoard
 from ui.vsAiMode.vsAiSetting import get_ai_game_settings
 from ui.vsAiMode.vsAiInfoPanel import vsAiInfoPanel
@@ -22,12 +22,12 @@ def start_ai_game_session(screen):
     if game_settings is None:
         return # Quay về menu chính
     
-    # Giải nén 3 giá trị từ màn hình cài đặt
-    player_name_from_input, human_player_char, first_turn = game_settings
+    # Giải nén 4 giá trị từ màn hình cài đặt
+    player_name_from_input, human_player_char, first_turn, difficulty = game_settings
 
     # Đặt giá trị mặc định cho thời gian vì màn hình cài đặt không có
     time_mode = "turn_based" # Chỉ người chơi bị tính giờ
-    time_limit = 20 # 20 giây cho người chơi
+    time_limit = 25 # 20 giây cho người chơi
 
     # Xác định quân cờ và tên của người chơi và AI
     ai_player_char = 'O' if human_player_char == 'X' else 'X'
@@ -72,6 +72,7 @@ def start_ai_game_session(screen):
     last_move = None # Lưu tọa độ nước đi cuối cùng
     
     # Biến để quản lý luồng của AI
+    ai.set_difficulty(difficulty)
     ai_is_thinking = False
     ai_thread = None
     ai_move_result = None
@@ -95,7 +96,7 @@ def start_ai_game_session(screen):
                 # Hàm mục tiêu cho luồng AI
                 def run_ai_calculation():
                     nonlocal ai_move_result
-                    ai_move_result = ai.find_best_move(game_logic, is_first_move)
+                    ai_move_result = ai.find_best_move(game_logic, is_first_move, 10) # Đặt giới hạn 8 giây
 
                 ai_thread = threading.Thread(target=run_ai_calculation)
                 ai_thread.start()
@@ -131,6 +132,13 @@ def start_ai_game_session(screen):
 
             if game_state.handle_event(event, timer, board):
                 continue
+
+            # Xử lý nhấn phím ESC để thoát game
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if not game_state.game_over and not ai_is_thinking: # Chỉ hiển thị khi game chưa kết thúc và AI không đang suy nghĩ
+                    if show_quit_confirmation_dialog(screen, board_rect):
+                        running = False # Đặt cờ để thoát vòng lặp game
+                        continue
 
             # --- Lượt đi của người chơi ---
             if game_state.is_playing() and current_player != ai_player_char:

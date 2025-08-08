@@ -1,261 +1,231 @@
 import pygame
 
-from manager.SoundManager import SoundManager
+from manager.CursorManager import CursorManager
 from handler.PieceDragHandler import PieceDragHandler
+from ui.components.InputBox import InputBox
+from ui.general.SettingUI import SettingUI
 from utils.ResourcePath import resource_path
 
 # Hằng số cho màu sắc và font chữ
-BG_COLOR = (255, 255, 255)
+WHITE = (255, 255, 255)
+BLUE = (0, 120, 215)
+BLUE_HOVER = (0, 150, 255)
 TEXT_COLOR = (40, 40, 40)
+DARK_GRAY = (100, 100, 100)
+GRAY_HOVER = (130, 130, 130)
 INPUT_BOX_COLOR_INACTIVE = (200, 200, 200)
-INPUT_BOX_COLOR_ACTIVE = (100, 100, 100)
-START_BUTTON_COLOR = (0, 120, 215) # Màu xanh nước biển
-START_BUTTON_HOVER_COLOR = (0, 150, 255) # Màu xanh nước biển nhạt hơn khi hover
 START_BUTTON_DISABLED_COLOR = (180, 180, 180)
 DRAG_COLOR = (150, 150, 150)
-DRAG_HIGHLIGHT_COLOR = (100, 100, 100) # Màu highlight khi kéo vào ô thả
-BUTTON_TEXT_COLOR = (255, 255, 255)
-BACK_BUTTON_COLOR = (100, 100, 100) # Màu xám đậm cho nút Quay lại
-BACK_BUTTON_HOVER_COLOR = (130, 130, 130)
-BACK_BUTTON_TEXT_COLOR = (40, 40, 40) # Màu đen cho chữ nút Quay lại
 MODE_BUTTON_COLOR_INACTIVE = (220, 220, 220)
-MODE_BUTTON_COLOR_ACTIVE = (0, 120, 215)
 
-def get_two_player_setting(screen):
+class TwoPlayerSetting(SettingUI):
     """
-    Hiển thị màn hình để người dùng nhập tên và trả về tên của họ.
+    Hiển thị màn hình cài đặt cho chế độ 2 người chơi.
     """
-    screen_width, screen_height = screen.get_size()
-    font_title = pygame.font.SysFont("Times New Roman", 60, bold=True)
-    font_label = pygame.font.SysFont("Times New Roman", 36)
-    font_input = pygame.font.SysFont("Times New Roman", 32)
-    font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)
-    font_mode = pygame.font.SysFont("Times New Roman", 28)
+    def __init__(self, screen):
+        super().__init__(screen)
 
-    # Tải hình nền
-    background_img = pygame.image.load(resource_path('img/Background.jpg')).convert()
-    background_img = pygame.transform.scale(background_img, (screen_width, screen_height))
+        # Tải và thay đổi kích thước hình ảnh X và O
+        self.img_size = 50 
+        x_img_raw = pygame.image.load(resource_path('img/X.png')).convert_alpha()
+        o_img_raw = pygame.image.load(resource_path('img/O.png')).convert_alpha()
+        self.x_img = pygame.transform.scale(x_img_raw, (self.img_size, self.img_size))
+        self.o_img = pygame.transform.scale(o_img_raw, (self.img_size, self.img_size))
 
-    # Thiết lập độ mờ cho ảnh nền
-    background_img.set_alpha(50)
+        # Các ô nhập liệu và nhãn
+        input_box_width = 500
+        self.input_box1 = pygame.Rect((self.screen_width - input_box_width) / 2, 80, input_box_width, 50)
+        self.input_box2 = pygame.Rect((self.screen_width - input_box_width) / 2, 150, input_box_width, 50)
+        self.player1_name = ""
+        self.player2_name = ""
+        self.active_box = None  # Có thể là 1 hoặc 2, hoặc None
 
-    # Tải và thay đổi kích thước hình ảnh X và O
-    img_size = 50 
-    x_img_raw = pygame.image.load(resource_path('img/X.png')).convert_alpha()
-    o_img_raw = pygame.image.load(resource_path('img/O.png')).convert_alpha()
-    x_img = pygame.transform.scale(x_img_raw, (img_size, img_size))
-    o_img = pygame.transform.scale(o_img_raw, (img_size, img_size))
+        self.input_box1_ui = InputBox(self.input_box1.x, self.input_box1.y
+                                      , self.input_box1.width, self.input_box1.height, 
+                                      self.font_label, TEXT_COLOR, DARK_GRAY, INPUT_BOX_COLOR_INACTIVE)
+        self.input_box2_ui = InputBox(self.input_box2.x, self.input_box2.y, 
+                                      self.input_box2.width, self.input_box2.height, 
+                                      self.font_label, TEXT_COLOR, DARK_GRAY, INPUT_BOX_COLOR_INACTIVE)
 
-    # Các ô nhập liệu và nhãn
-    input_box_width = 500
-    input_box1 = pygame.Rect((screen_width - input_box_width) / 2, 80, input_box_width, 50)
-    input_box2 = pygame.Rect((screen_width - input_box_width) / 2, 150, input_box_width, 50)
-    player1_name = ""
-    player2_name = ""
-    active_box = None  # Có thể là 1 hoặc 2, hoặc None
+        # Vị trí ban đầu của X và O để kéo
+        x_drag_rect_initial_center = (self.screen_width / 2 - 100, 400)
+        o_drag_rect_initial_center = (self.screen_width / 2 + 100, 400)
 
-    # Vị trí ban đầu của X và O để kéo
-    x_drag_rect_initial_center = (screen_width / 2 - 100, 400)
-    o_drag_rect_initial_center = (screen_width / 2 + 100, 400)
+        # Vị trí thả cho người chơi 1 và 2
+        self.drop_target1 = pygame.Rect(self.input_box1.x + self.input_box1.width + 20, self.input_box1.y, self.img_size, self.img_size)
+        self.drop_target2 = pygame.Rect(self.input_box2.x + self.input_box2.width + 20, self.input_box2.y, self.img_size, self.img_size)
 
-    # Vị trí thả cho người chơi 1 và 2
-    drop_target1 = pygame.Rect(input_box1.x + input_box1.width + 20, input_box1.y, img_size, img_size)
-    drop_target2 = pygame.Rect(input_box2.x + input_box2.width + 20, input_box2.y, img_size, img_size)
+        # Khởi tạo trình xử lý kéo thả quân cờ
+        self.drag_handler = PieceDragHandler(self.x_img, self.o_img, x_drag_rect_initial_center, o_drag_rect_initial_center, self.drop_target1, self.drop_target2)
 
-    # Khởi tạo trình xử lý kéo thả quân cờ
-    drag_handler = PieceDragHandler(x_img, o_img, x_drag_rect_initial_center, o_drag_rect_initial_center, drop_target1, drop_target2)
+        # Các chế độ chơi
+        self.modes = {
+            "turn_based": {"name": "20 giây mỗi lượt", "time_limit": 20},
+            "total_time": {"name": "2 phút tổng cộng", "time_limit": 120}
+        }
+        self.selected_mode = None # Chế độ mặc định
 
-    # Các chế độ chơi
-    modes = {
-        "turn_based": {"name": "20 giây mỗi lượt", "time_limit": 20},
-        "total_time": {"name": "2 phút tổng cộng", "time_limit": 120}
-    }
-    selected_mode = "turn_based" # Chế độ mặc định
+        # --- Các nút chọn chế độ (Radio button) ---
+        self.radio_button_y_start = 550
+        self.radio_button_spacing = 40
+        self.radio_button_radius = 15
+        # Khu vực có thể click cho radio button (bao gồm cả nút tròn và chữ)
+        self.radio_turn_based_rect = pygame.Rect(self.screen_width / 2 - 150, self.radio_button_y_start - self.radio_button_radius, 300, self.radio_button_radius * 2)
+        self.radio_total_time_rect = pygame.Rect(self.screen_width / 2 - 150, self.radio_button_y_start + self.radio_button_spacing - self.radio_button_radius, 300, self.radio_button_radius * 2)
 
-    # --- Các nút chọn chế độ (Radio button) ---
-    radio_button_y_start = 550
-    radio_button_spacing = 40
-    radio_button_radius = 15
-    # Khu vực có thể click cho radio button (bao gồm cả nút tròn và chữ)
-    radio_turn_based_rect = pygame.Rect(screen_width / 2 - 150, radio_button_y_start - radio_button_radius, 300, radio_button_radius * 2)
-    radio_total_time_rect = pygame.Rect(screen_width / 2 - 150, radio_button_y_start + radio_button_spacing - radio_button_radius, 300, radio_button_radius * 2)
+        self.cursor_manager = CursorManager()
 
-    # Nút Bắt đầu
-    button_width = 200
-    button_height = 60
-    start_button = pygame.Rect(screen_width / 2 + 50, 700, button_width, button_height)
-
-    # Nút Quay lại
-    back_button = pygame.Rect(screen_width / 2 - 50 - button_width, 700, button_width, button_height)
-
-    sound_manager = SoundManager()
-    game_running = True
-    while game_running:
+    def run(self):
         mouse_pos = pygame.mouse.get_pos()
 
+        self.player1_name = self.input_box1_ui.get_text()
+        self.player2_name = self.input_box2_ui.get_text()
+
         # Điều kiện để kích hoạt nút "Bắt đầu"
-        is_start_enabled = (player1_name.strip() and
-                            player2_name.strip() and
-                            drag_handler.player1_piece and
-                            drag_handler.player2_piece)
+        is_start_enabled = (self.player1_name.strip() and
+                            self.player2_name.strip() and
+                            self.drag_handler.player1_piece and
+                            self.drag_handler.player2_piece and
+                            self.selected_mode is not None)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if input_box1.collidepoint(event.pos):
-                    active_box = 1
-                elif input_box2.collidepoint(event.pos):
-                    active_box = 2
-                elif radio_turn_based_rect.collidepoint(event.pos):
-                    if selected_mode != "turn_based":
-                        sound_manager.play_button_click()
-                    selected_mode = "turn_based"
-                elif radio_total_time_rect.collidepoint(event.pos):
-                    if selected_mode != "total_time":
-                        sound_manager.play_button_click()
-                    selected_mode = "total_time"
-                elif start_button.collidepoint(event.pos) and is_start_enabled:
-                    sound_manager.play_button_click()
-                    pygame.time.wait(100)
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
-                    # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn
-                    if drag_handler.player1_piece == 'X':
-                        return player1_name.strip(), player2_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
-                    elif drag_handler.player1_piece == 'O':
-                        return player2_name.strip(), player1_name.strip(), selected_mode, modes[selected_mode]["time_limit"]
+            self.input_box1_ui.handle_event(event)
+            self.input_box2_ui.handle_event(event)
 
-                elif back_button.collidepoint(event.pos):
-                    sound_manager.play_button_click()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.radio_turn_based_rect.collidepoint(event.pos):
+                    if self.selected_mode != "turn_based":
+                        self.sound_manager.play_button_click()
+                    self.selected_mode = "turn_based"
+                elif self.radio_total_time_rect.collidepoint(event.pos):
+                    if self.selected_mode != "total_time":
+                        self.sound_manager.play_button_click()
+                    self.selected_mode = "total_time"
+                elif self.start_button.collidepoint(event.pos) and is_start_enabled:
+                    self.sound_manager.play_button_click()
                     pygame.time.wait(100)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
-                    return None # Quay lại menu chính
+                    # Trả về tên và thời gian giới hạn dựa trên chế độ đã chọn (player1_name là X, player2_name là O)
+                    if self.drag_handler.player1_piece == 'X':
+                        return self.player1_name.strip(), self.player2_name.strip(), self.selected_mode, self.modes[self.selected_mode]["time_limit"]
+                    elif self.drag_handler.player1_piece == 'O':
+                        return self.player2_name.strip(), self.player1_name.strip(), self.selected_mode, self.modes[self.selected_mode]["time_limit"]
+
+                elif self.back_button.collidepoint(event.pos):
+                    self.sound_manager.play_button_click()
+                    pygame.time.wait(100)
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW) # Khôi phục con trỏ
+                    return 'back' # Quay lại menu chính
                 else:
-                    active_box = None
-                
-                # Bắt đầu kéo
-                drag_handler.handle_mouse_down(event.pos)
-
-            if event.type == pygame.MOUSEMOTION:
-                drag_handler.handle_mouse_motion(event.pos)
-
-            if event.type == pygame.MOUSEBUTTONUP:
-                drag_handler.handle_mouse_up(event.pos)
-
+                    self.active_box = None
+            
+            self._handle_piece_drag_and_drop(event)
 
             if event.type == pygame.KEYDOWN:
-                if active_box == 1:
+                if self.active_box is not None:
+                    # Reset con trỏ khi gõ phím để nó hiện lên ngay lập tức
+                    self.cursor_visible = True
+                    self.last_cursor_toggle = pygame.time.get_ticks()
+
                     if event.key == pygame.K_BACKSPACE:
-                        player1_name = player1_name[:-1]
-                    else:
-                        player1_name += event.unicode
-                elif active_box == 2:
-                    if event.key == pygame.K_BACKSPACE:
-                        player2_name = player2_name[:-1]
-                    else:
-                        player2_name += event.unicode
+                        if self.active_box == 1:
+                            self.player1_name = self.player1_name[:-1]
+                        elif self.active_box == 2:
+                            self.player2_name = self.player2_name[:-1]
+                    elif event.key == pygame.K_RETURN: # Nhấn Enter cũng tắt ô nhập liệu
+                        self.active_box = None
+                    else: # Nhập ký tự thông thường
+                        # Xử lý dán (Ctrl+V hoặc Cmd+V)
+                        if event.key == pygame.K_v and (pygame.key.get_mods() & pygame.KMOD_CTRL or pygame.key.get_mods() & pygame.KMOD_GUI):
+                            if self.active_box == 1:
+                                self.player1_name = self._handle_paste(event, self.player1_name)
+                            elif self.active_box == 2:
+                                self.player2_name = self._handle_paste(event, self.player2_name)
+                        if self.active_box == 1:
+                            self.player1_name += event.unicode
+                        else:
+                            self.player2_name += event.unicode
 
         # --- Vẽ lên màn hình ---
         # Lấp đầy màn hình bằng một màu nền đặc trước khi vẽ ảnh nền trong suốt
-        screen.fill(BG_COLOR)
-        screen.blit(background_img, (0, 0))
+        self.screen.fill(WHITE)
+        self.screen.blit(self.background_img, (0, 0))
 
-        # Thay đổi con trỏ chuột khi di chuột qua các nút có thể nhấn
-        cursor_changed = False
-        if is_start_enabled and start_button.collidepoint(mouse_pos):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-            cursor_changed = True
-        elif back_button.collidepoint(mouse_pos):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-            cursor_changed = True
-
-        if not cursor_changed:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-
-        # Nhập tên người chơi 1
-        label1_surf = font_label.render("Người chơi 1:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
-        screen.blit(label1_surf, (input_box1.x - label1_surf.get_width() - 20, input_box1.y + (input_box1.height - label1_surf.get_height()) / 2))
-        pygame.draw.rect(screen, INPUT_BOX_COLOR_ACTIVE if active_box == 1 else INPUT_BOX_COLOR_INACTIVE, input_box1, 2)
-        screen.blit(font_input.render(player1_name, True, TEXT_COLOR), (input_box1.x + 10, input_box1.y + 10))
-
-        # Nhập tên người chơi 2
-        label2_surf = font_label.render("Người chơi 2:", True, TEXT_COLOR) # Đặt nhãn bên trái ô nhập liệu
-        screen.blit(label2_surf, (input_box2.x - label2_surf.get_width() - 20, input_box2.y + (input_box2.height - label2_surf.get_height()) / 2))
-        pygame.draw.rect(screen, INPUT_BOX_COLOR_ACTIVE if active_box == 2 else INPUT_BOX_COLOR_INACTIVE, input_box2, 2)
-        screen.blit(font_input.render(player2_name, True, TEXT_COLOR), (input_box2.x + 10, input_box2.y + 10))
-
-        # Vẽ các ô thả quân cờ
-        pygame.draw.rect(screen, DRAG_HIGHLIGHT_COLOR if drop_target1.collidepoint(pygame.mouse.get_pos()) and drag_handler.dragging else DRAG_COLOR, drop_target1, 2)
-        pygame.draw.rect(screen, DRAG_HIGHLIGHT_COLOR if drop_target2.collidepoint(pygame.mouse.get_pos()) and drag_handler.dragging else DRAG_COLOR, drop_target2, 2)
-
-        # Hiển thị quân cờ đã chọn
-        if drag_handler.player1_piece == 'X':
-            screen.blit(x_img, drop_target1.topleft)
-        elif drag_handler.player1_piece == 'O':
-            screen.blit(o_img, drop_target1.topleft)
+        # Sử dụng CursorManager để xử lý con trỏ chuột
+        self.cursor_manager = CursorManager() # Reset mỗi frame
+        self.cursor_manager.add_text_input(self.input_box1_ui)
+        self.cursor_manager.add_text_input(self.input_box2_ui)
+        self.cursor_manager.add_clickable_area(self.start_button, is_start_enabled)
+        self.cursor_manager.add_clickable_area(self.back_button)
+        self.cursor_manager.add_clickable_area(self.drag_handler.x_drag_rect)
+        self.cursor_manager.add_clickable_area(self.drag_handler.o_drag_rect)
+        self.cursor_manager.add_clickable_area(self.radio_turn_based_rect)
+        self.cursor_manager.add_clickable_area(self.radio_total_time_rect)
+        self.cursor_manager.update(mouse_pos)
         
-        if drag_handler.player2_piece == 'X':
-            screen.blit(x_img, drop_target2.topleft)
-        elif drag_handler.player2_piece == 'O':
-            screen.blit(o_img, drop_target2.topleft)
+        # Vẽ các ô nhập tên người chơi
+        super()._draw_section_title(self.screen, "Người chơi 1:", TEXT_COLOR, self.font_label, self.input_box1.y - 30, self.screen_width, align_left_of_box=self.input_box1)
+        self.input_box1_ui.draw(self.screen)
+        super()._draw_section_title(self.screen, "Người chơi 2:", TEXT_COLOR, self.font_label, self.input_box2.y - 30, self.screen_width, align_left_of_box=self.input_box2)
+        self.input_box2_ui.draw(self.screen)
 
-        # Vẽ quân cờ X và O để kéo
-        # Chỉ vẽ nếu chưa được chọn hoặc đang được kéo
-        if not drag_handler.player1_piece == 'X' and not drag_handler.player2_piece == 'X' or (drag_handler.dragging and drag_handler.dragged_piece == 'X'):
-            screen.blit(x_img, drag_handler.x_drag_rect)
-        if not drag_handler.player1_piece == 'O' and not drag_handler.player2_piece == 'O' or (drag_handler.dragging and drag_handler.dragged_piece == 'O'):
-            screen.blit(o_img, drag_handler.o_drag_rect)
+        self._draw_piece_drag_and_drop(self.screen, mouse_pos, DRAG_COLOR, DARK_GRAY)
 
         # Hiển thị hướng dẫn kéo thả
-        drag_instruction_surf = font_label.render("Kéo X hoặc O vào ô nhỏ để chọn quân cờ", True, TEXT_COLOR)
-        screen.blit(drag_instruction_surf, drag_instruction_surf.get_rect(center=(screen_width / 2, 320)))
+        super()._draw_section_title(self.screen, "Kéo X hoặc O vào ô nhỏ để chọn quân cờ:", TEXT_COLOR, self.font_label, 320, self.screen_width)
 
         # Vẽ lựa chọn chế độ chơi
-        mode_label_surf = font_label.render("Chọn chế độ thời gian:", True, TEXT_COLOR)
-        screen.blit(mode_label_surf, mode_label_surf.get_rect(center=(screen_width / 2, 500)))
+        super()._draw_section_title(self.screen, "Chọn chế độ thời gian:", TEXT_COLOR, self.font_label, 500, self.screen_width)
 
-        # --- Vẽ Radio Buttons ---
-        radio_y1 = radio_turn_based_rect.centery
-        radio_y2 = radio_total_time_rect.centery
+        # Vẽ Radio Buttons
         # Căn chỉnh vị trí X của vòng tròn và văn bản
-        radio_x = radio_turn_based_rect.x + radio_button_radius
-        text_x_offset = radio_button_radius + 10
+        radio_x = self.radio_turn_based_rect.x + self.radio_button_radius
 
-        # Lựa chọn 1: "30 giây mỗi lượt"
-        pygame.draw.circle(screen, TEXT_COLOR, (radio_x, radio_y1), radio_button_radius, 2)
-        if selected_mode == "turn_based":
-            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x, radio_y1), radio_button_radius - 4)
-        turn_based_text_surf = font_mode.render(modes["turn_based"]["name"], True, TEXT_COLOR)
-        screen.blit(turn_based_text_surf, (radio_x + text_x_offset, radio_y1 - turn_based_text_surf.get_height() / 2))
+        # Lựa chọn 1: "20 giây mỗi lượt"
+        super().draw_radio_button(self.screen, radio_x, self.radio_turn_based_rect.centery, self.radio_button_radius,
+                                  self.selected_mode == "turn_based", self.modes["turn_based"]["name"],
+                                  self.font_mode, TEXT_COLOR, BLUE)
 
-        # Lựa chọn 2: "3 phút tổng cộng"
-        pygame.draw.circle(screen, TEXT_COLOR, (radio_x, radio_y2), radio_button_radius, 2)
-        if selected_mode == "total_time":
-            pygame.draw.circle(screen, MODE_BUTTON_COLOR_ACTIVE, (radio_x, radio_y2), radio_button_radius - 4)
-        total_time_text_surf = font_mode.render(modes["total_time"]["name"], True, TEXT_COLOR)
-        screen.blit(total_time_text_surf, (radio_x + text_x_offset, radio_y2 - total_time_text_surf.get_height() / 2))
+        # Lựa chọn 2: "2 phút tổng cộng"
+        super().draw_radio_button(self.screen, radio_x, self.radio_total_time_rect.centery, self.radio_button_radius,
+                                  self.selected_mode == "total_time", self.modes["total_time"]["name"],
+                                  self.font_mode, TEXT_COLOR, BLUE)
 
         # Nút Bắt đầu
         if is_start_enabled:
-            if start_button.collidepoint(mouse_pos):
-                button_color = START_BUTTON_HOVER_COLOR
+            if self.start_button.collidepoint(mouse_pos):
+                button_color = BLUE_HOVER
             else:
-                button_color = START_BUTTON_COLOR
+                button_color = BLUE
         else:
             button_color = START_BUTTON_DISABLED_COLOR
-        pygame.draw.rect(screen, button_color, start_button, border_radius=10)
-        button_text_surf = font_button.render("Bắt đầu", True, BUTTON_TEXT_COLOR)
-        screen.blit(button_text_surf, button_text_surf.get_rect(center=start_button.center))
+        super().draw_button(self.screen, self.start_button, button_color, "Bắt đầu", self.font_button, WHITE, 10)
 
         # Vẽ nút Quay lại
-        if back_button.collidepoint(mouse_pos):
-            back_button_color = BACK_BUTTON_HOVER_COLOR
+        if self.back_button.collidepoint(mouse_pos):
+            back_button_color = GRAY_HOVER
         else:
-            back_button_color = BACK_BUTTON_COLOR
-        pygame.draw.rect(screen, back_button_color, back_button, border_radius=10)
-        back_text_surf = font_button.render("Quay lại", True, BUTTON_TEXT_COLOR)
-        screen.blit(back_text_surf, back_text_surf.get_rect(center=back_button.center))
+            back_button_color = DARK_GRAY
+        super().draw_button(self.screen, self.back_button, back_button_color, "Quay lại", self.font_button, WHITE, 10)
 
         pygame.display.flip()
+
+def get_two_player_setting(screen):
+    """
+    Hàm tiện ích để khởi tạo và gọi màn hình cài đặt 2 người chơi.
+    """
+    settings_ui = TwoPlayerSetting(screen)
+    running = True
+
+    while running:
+        result = settings_ui.run() # run() trả về tuple, 'back', hoặc None
+        if result == 'back':
+            return None # Quay lại menu chính
+        elif result is not None:
+            return result # Trả về cài đặt
+
+        pygame.time.wait(10) # Đợi một chút để tránh ngốn CPU

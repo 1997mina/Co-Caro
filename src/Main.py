@@ -1,6 +1,5 @@
 import pygame
 import sys
-import os
 
 from ui.twoplayermode.TwoPlayerGameSession import start_two_players_session
 from ui.MainMenu import show_main_menu

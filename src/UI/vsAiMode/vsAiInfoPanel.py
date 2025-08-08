@@ -1,7 +1,7 @@
 import pygame
 
 from utils.ResourcePath import resource_path
-from ui.InfoPanel import InfoPanel
+from ui.general.InfoPanel import InfoPanel
 
 class vsAiInfoPanel(InfoPanel):
     """

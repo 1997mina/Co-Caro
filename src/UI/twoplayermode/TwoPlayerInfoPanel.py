@@ -1,4 +1,4 @@
-from ui.InfoPanel import InfoPanel
+from ui.general.InfoPanel import InfoPanel
 
 class TwoPlayerInfoPanel(InfoPanel):
     """

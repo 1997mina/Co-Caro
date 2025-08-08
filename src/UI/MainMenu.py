@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+from manager.CursorManager import CursorManager
 from utils.ResourcePath import resource_path
 from manager.SoundManager import SoundManager
 
@@ -69,20 +70,17 @@ def show_main_menu(screen):
     }
 
     sound_manager = SoundManager()
+    cursor_manager = CursorManager()
 
     # Vòng lặp chính của menu
     while True:
         mouse_pos = pygame.mouse.get_pos()
 
-        # Thay đổi con trỏ chuột khi di chuột qua các nút
-        cursor_changed = False
+        # Sử dụng CursorManager để quản lý con trỏ
+        cursor_manager = CursorManager() # Reset mỗi frame
         for action, button_info in buttons.items():
-            if button_info['rect'].collidepoint(mouse_pos) and button_info['enabled']:
-                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-                cursor_changed = True
-                break
-        if not cursor_changed:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            cursor_manager.add_clickable_area(button_info['rect'], button_info['enabled'])
+        cursor_manager.update(mouse_pos)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

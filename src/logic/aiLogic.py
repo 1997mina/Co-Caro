@@ -1,4 +1,6 @@
 import random
+import math
+import time
 
 class AIPlayer:
     """
@@ -14,10 +16,20 @@ class AIPlayer:
         """
         self.AI_SYMBOL = ai_symbol
         self.HUMAN_SYMBOL = human_symbol
-        self.WIN_LENGTH = win_length
-        self.SEARCH_DEPTH = 1 # Với hàm đánh giá tối ưu, có thể tăng độ sâu để AI thông minh hơn
+        self.WIN_LENGTH = win_length # Số quân cờ liên tiếp để thắng
+        self.difficulty = None # 'easy', 'medium', 'hard'
+
         # Bảng điểm cho các thế cờ
         self.SCORE_PATTERNS = {
+            # Điểm cho các chuỗi của AI
+            'AI': {
+                5: 100000000, # 5 quân -> Thắng chắc
+                4: 100000, # 4 quân
+                3: 1000, # 3 quân
+                2: 10, # 2 quân
+                1: 1 # 1 quân
+            },
+            # Điểm cho các chuỗi của người chơi (để chặn)
             5: 10000000, # 5 quân -> Thắng chắc
             4: 50000,    # 4 quân
             3: 200,      # 3 quân
@@ -25,13 +37,25 @@ class AIPlayer:
             1: 1         # 1 quân
         }
 
-    def find_best_move(self, board_logic, is_first_move):
+    def set_difficulty(self, difficulty):
+        """Đặt độ khó cho AI."""
+        self.difficulty = difficulty
+        if difficulty == 'easy':
+            self.SEARCH_DEPTH = 1 # Độ sâu thấp
+            self.MAX_MOVES_TO_CONSIDER = 10 # Chỉ xét 10 nước đi tiềm năng nhất
+        elif difficulty == 'medium':
+            self.SEARCH_DEPTH = 2 # Độ sâu trung bình
+            self.MAX_MOVES_TO_CONSIDER = 20 # Xét 15 nước
+        elif difficulty == 'hard':
+            self.SEARCH_DEPTH = 3 # Độ sâu cao
+            self.MAX_MOVES_TO_CONSIDER = 30 # Xét 20 nước
+
+    def find_best_move(self, board_logic, is_first_move=False, time_limit=8):
         """
         Tìm và trả về tọa độ (hàng, cột) của nước đi tốt nhất.
         Sử dụng Minimax với cắt tỉa Alpha-Beta.
         Args:
-            board_logic (BoardLogic): Đối tượng logic của bàn cờ, chứa trạng thái bàn cờ.
-            is_first_move (bool): True nếu đây là nước đi đầu tiên của ván cờ.
+            time_limit (int): Thời gian tối đa (giây) cho phép AI suy nghĩ.
         Returns:
             tuple: Tọa độ (hàng, cột) của nước đi tốt nhất, hoặc None nếu không tìm thấy.
         """
@@ -40,26 +64,59 @@ class AIPlayer:
             center_r, center_c = board_logic.height // 2, board_logic.width // 2
             return (center_r, center_c)
 
-        best_score = -float('inf')
-        best_move = None
+        start_time = time.time()
 
         possible_moves = self._get_possible_moves(board_logic)
+        if not possible_moves:
+            return None
 
+        # --- Tối ưu hóa: Sắp xếp nước đi (Move Ordering) ---
+        # 1. Đánh giá sơ bộ và lưu điểm cho mỗi nước đi
+        scored_moves = []
         for move in possible_moves:
             r, c = move
             board_logic.board[r][c] = self.AI_SYMBOL
-            score = self._minimax(board_logic, self.SEARCH_DEPTH, -float('inf'), float('inf'), False)
+            # Sử dụng _evaluate_board để có điểm số heuristic nhanh
+            score = self._evaluate_board(board_logic)
+            board_logic.board[r][c] = '' # Hoàn tác
+            scored_moves.append((score, move))
+
+        # 2. Sắp xếp các nước đi từ tốt nhất đến tệ nhất dựa trên điểm sơ bộ
+        scored_moves.sort(key=lambda x: x[0], reverse=True)
+        # Giới hạn số lượng nước đi cần xem xét để tối ưu hóa
+        sorted_moves = [move for score, move in scored_moves][:self.MAX_MOVES_TO_CONSIDER]
+        # ----------------------------------------------------
+
+        best_score = -float('inf')
+        best_move = None
+        top_moves = []
+
+        # 3. Chạy Minimax trên danh sách đã được sắp xếp và giới hạn
+        for move in sorted_moves:
+            # Kiểm tra giới hạn thời gian trong mỗi vòng lặp
+            if time.time() - start_time > time_limit:
+                print(f"AI: Hết thời gian ({time_limit}s), trả về nước đi tốt nhất đã tìm thấy.")
+                break # Dừng tìm kiếm nếu hết giờ
+
+            r, c = move
+            board_logic.board[r][c] = self.AI_SYMBOL
+            # Gọi minimax với độ sâu đã được cấu hình
+            score = self._minimax(board_logic, self.SEARCH_DEPTH, -math.inf, math.inf, False)
             board_logic.board[r][c] = '' # Hoàn tác nước đi
 
             if score > best_score:
                 best_score = score
-                best_move = move
-            # Thêm một chút ngẫu nhiên nếu các nước đi có điểm số bằng nhau
-            elif score == best_score:
-                if random.choice([True, False]):
-                    best_move = move
+                top_moves = [move] # Bắt đầu lại danh sách các nước đi tốt nhất
+            elif score == best_score: # Nếu có cùng điểm số, thêm vào danh sách
+                top_moves.append(move)
 
-        return best_move
+        # Chọn ngẫu nhiên từ các nước đi tốt nhất nếu có nhiều hơn một
+        if top_moves:
+            best_move = random.choice(top_moves)
+        
+        # Nếu không tìm được nước đi nào (ví dụ: hết giờ ngay từ đầu),
+        # trả về nước đi đầu tiên trong danh sách đã sắp xếp.
+        return best_move or (sorted_moves[0] if sorted_moves else None)
 
     def _minimax(self, board_logic, depth, alpha, beta, is_maximizing_player):
         """Thuật toán Minimax với cắt tỉa Alpha-Beta."""
@@ -71,7 +128,7 @@ class AIPlayer:
             return 0
 
         if is_maximizing_player: # Lượt của AI (Max)
-            max_eval = -float('inf')
+            max_eval = -math.inf
             for move in possible_moves:
                 r, c = move
                 board_logic.board[r][c] = self.AI_SYMBOL
@@ -83,7 +140,7 @@ class AIPlayer:
                     break # Cắt tỉa Beta
             return max_eval
         else: # Lượt của người chơi (Min)
-            min_eval = float('inf')
+            min_eval = math.inf
             for move in possible_moves:
                 r, c = move
                 board_logic.board[r][c] = self.HUMAN_SYMBOL
@@ -109,10 +166,10 @@ class AIPlayer:
         if ai_count > 0 and human_count > 0:
             return 0
 
-        if ai_count > 0: # Cửa sổ tấn công của AI
-            score = self.SCORE_PATTERNS.get(ai_count, 0)
+        if ai_count > 0: # Cửa sổ tấn công của AI (AI đang xây dựng chuỗi)
+            score = self.SCORE_PATTERNS['AI'].get(ai_count, 0)
         elif human_count > 0: # Cửa sổ phòng thủ (chặn người chơi)
-            # Điểm phòng thủ thường được ưu tiên hơn một chút so với tấn công
+            # Điểm phòng thủ thường được ưu tiên hơn một chút so với tấn công của AI để đảm bảo chặn
             score = -self.SCORE_PATTERNS.get(human_count, 0) * 1.1
 
         return score

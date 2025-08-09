@@ -86,7 +86,12 @@ def start_two_players_session(screen):
 
             # Chỉ xử lý logic game nếu game đang chạy
             if game_state.is_playing():
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                # Xử lý click nút Thoát trên InfoPanel
+                if board.player_info_panel.quit_button.handle_event(event):
+                    if show_quit_confirmation_dialog(screen, board_rect):
+                        running = False
+                        continue
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouseX, mouseY = event.pos
                     # Chỉ xử lý click nếu nó nằm trong khu vực bàn cờ
                     if mouseX >= panel_actual_width:

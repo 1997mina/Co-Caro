@@ -142,6 +142,14 @@ def start_ai_game_session(screen):
 
             # --- Lượt đi của người chơi ---
             if game_state.is_playing() and current_player != ai_player_char:
+                # Xử lý click nút Thoát trên InfoPanel
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Chỉ cho phép thoát khi AI không đang suy nghĩ và nút thoát được nhấn
+                    if board.player_info_panel.quit_button.rect.collidepoint(event.pos) and not ai_is_thinking:
+                        sound_manager.play_button_click()
+                        if show_quit_confirmation_dialog(screen, board_rect):
+                            running = False
+                            continue
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouseX, mouseY = event.pos
                     if mouseX >= panel_actual_width:

@@ -59,3 +59,6 @@ class PieceDragHandler:
                     self.o_drag_rect.center = self.initial_o_center
             self.dragging = False
             self.dragged_piece = None
+
+    def is_piece_dropped(self, piece_char):
+        return self.player1_piece == piece_char or self.player2_piece == piece_char

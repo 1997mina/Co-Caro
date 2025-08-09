@@ -1,9 +1,10 @@
 import pygame
 import sys
 
-from manager.CursorManager import CursorManager
 from utils.ResourcePath import resource_path
 from ui.general.SettingUI import SettingUI
+from ui.components.Button import Button
+from manager.CursorManager import CursorManager
 from ui.components.InputBox import InputBox
 
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
@@ -24,8 +25,8 @@ class VsAiSetting(SettingUI):
 
         # Tải và thay đổi kích thước hình ảnh X và O
         img_size = 80
-        self.x_img = pygame.transform.scale(pygame.image.load(resource_path('img/X.png')).convert_alpha(), (img_size, img_size))
-        self.o_img = pygame.transform.scale(pygame.image.load(resource_path('img/O.png')).convert_alpha(), (img_size, img_size))
+        self.x_img = pygame.transform.scale(pygame.image.load(resource_path('img/general/X.png')).convert_alpha(), (img_size, img_size))
+        self.o_img = pygame.transform.scale(pygame.image.load(resource_path('img/general/O.png')).convert_alpha(), (img_size, img_size))
 
         # --- Ô nhập tên người chơi (sử dụng lớp InputBox) ---
         input_box_width = 500
@@ -40,23 +41,79 @@ class VsAiSetting(SettingUI):
         self.difficulty = None # 'easy', 'medium', 'hard'
 
         # 1. Các nút chọn quân cờ
-        self.x_button_rect = pygame.Rect(self.screen_width / 2 - 150, 220, 120, 120)
-        self.o_button_rect = pygame.Rect(self.screen_width / 2 + 30, 220, 120, 120)
+        button_size = 120
+        button_y = 220
+        
+        self.x_button = Button(self.screen_width / 2 - 150, button_y, button_size, button_size,
+                               self.x_img, self.sound_manager,
+                               color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
+                               pressed_color=YELLOW_HOVER, selected_color=YELLOW,
+                               border_radius=10)
+        
+        self.o_button = Button(self.screen_width / 2 + 30, button_y, button_size, button_size,
+                               self.o_img, self.sound_manager,
+                               color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
+                               pressed_color=YELLOW_HOVER, selected_color=YELLOW,
+                               border_radius=10)
 
-        # 2. Các nút radio chọn lượt đi đầu
-        self.radio_button_y = 450 # Y position for both radio buttons
-        self.radio_button_radius = 15
-        self.radio_player_first_rect = pygame.Rect(self.screen_width / 2 - 200, self.radio_button_y - self.radio_button_radius, 180, self.radio_button_radius * 2)
-        self.radio_ai_first_rect = pygame.Rect(self.screen_width / 2 + 20, self.radio_button_y - self.radio_button_radius, 180, self.radio_button_radius * 2)
+        self.piece_buttons = [self.x_button, self.o_button]
+
+        # 2. Các nút chọn lượt đi đầu
+        turn_button_width, turn_button_height = 200, 50
+        turn_button_y = 440 # Tăng khoảng cách
+        turn_button_spacing = 70 # Khoảng cách giữa các nút
+        self.player_first_button = Button(self.screen_width / 2 - turn_button_width - turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
+                                          self.font_mode.render("Bạn đi trước", True, TEXT_COLOR), self.sound_manager,
+                                          color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
+                                          selected_color=YELLOW, border_radius=10)
+
+        self.ai_first_button = Button(self.screen_width / 2 + turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
+                                      self.font_mode.render("Máy đi trước", True, TEXT_COLOR), self.sound_manager,
+                                      color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
+                                      selected_color=YELLOW, border_radius=10)
+
+        self.turn_buttons = [self.player_first_button, self.ai_first_button]
 
         # 3. Các nút chọn độ khó
-        difficulty_button_width = 150
-        difficulty_button_height = 50
-        self.easy_button_rect = pygame.Rect(self.screen_width / 2 - 250, 560, difficulty_button_width, difficulty_button_height)
-        self.medium_button_rect = pygame.Rect(self.screen_width / 2 - 75, 560, difficulty_button_width, difficulty_button_height)
-        self.hard_button_rect = pygame.Rect(self.screen_width / 2 + 100, 560, difficulty_button_width, difficulty_button_height)
+        difficulty_button_width, difficulty_button_height = 150, 50
+        difficulty_button_y = 570 # Điều chỉnh vị trí Y để phù hợp với thay đổi trên
+        difficulty_spacing = 50 # Khoảng cách giữa các nút độ khó
+        self.easy_button = Button(self.screen_width / 2 - difficulty_button_width * 1.5 - difficulty_spacing, difficulty_button_y, difficulty_button_width, difficulty_button_height,
+                                  self.font_mode.render("Dễ", True, TEXT_COLOR), self.sound_manager,
+                                  color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
+                                  selected_color=YELLOW, border_radius=10)
+
+        self.medium_button = Button(self.screen_width / 2 - difficulty_button_width / 2, difficulty_button_y, difficulty_button_width, difficulty_button_height,
+                                    self.font_mode.render("Trung bình", True, TEXT_COLOR), self.sound_manager,
+                                    color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
+                                    selected_color=YELLOW, border_radius=10)
+
+        self.hard_button = Button(self.screen_width / 2 + difficulty_button_width / 2 + difficulty_spacing, difficulty_button_y, difficulty_button_width, difficulty_button_height,
+                                  self.font_mode.render("Khó", True, TEXT_COLOR), self.sound_manager,
+                                  color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
+                                  selected_color=YELLOW, border_radius=10)
+        
+        self.difficulty_buttons = [self.easy_button, self.medium_button, self.hard_button]
+
+        # Nút Bắt đầu
+        button_width = 200
+        button_height = 60
+        start_button_x = self.screen_width / 2 + 50
+        start_button_y = 700
+        
+        self.start_button = Button(
+            start_button_x, start_button_y, button_width, button_height,
+            self.font_button.render("Bắt đầu", True, WHITE), self.sound_manager,
+            color=YELLOW, hover_color=YELLOW_HOVER, pressed_color=YELLOW_HOVER,
+            disabled_color=LIGHT_GRAY, border_radius=10
+        )
 
         self.cursor_manager = CursorManager()
+    
+    def _update_selection_buttons(self, selected_button, button_group):
+        """Cập nhật trạng thái is_selected cho một nhóm các nút."""
+        for button in button_group:
+            button.is_selected = (button == selected_button)
 
     def run(self):
         """
@@ -65,7 +122,6 @@ class VsAiSetting(SettingUI):
         """
         # Cập nhật trạng thái của ô nhập liệu (ví dụ: con trỏ nhấp nháy)
         self.player_name_input_box.update()
-        mouse_pos = pygame.mouse.get_pos() # Cập nhật vị trí chuột mỗi vòng lặp
 
         # Lấy tên người chơi từ InputBox để kiểm tra điều kiện bắt đầu
         player_name = self.player_name_input_box.get_text()
@@ -73,8 +129,10 @@ class VsAiSetting(SettingUI):
                             player_name != "" and 
                             self.first_turn is not None and 
                             self.difficulty is not None)
+        self.start_button.is_enabled = is_start_enabled
 
         for event in pygame.event.get():
+            mouse_pos = pygame.mouse.get_pos() # Lấy mouse_pos ở đầu vòng lặp sự kiện
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -82,92 +140,80 @@ class VsAiSetting(SettingUI):
             # Chuyển sự kiện cho ô nhập liệu để nó tự xử lý
             self.player_name_input_box.handle_event(event)
 
-            # Xử lý các sự kiện click chuột cho các nút khác
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.x_button_rect.collidepoint(mouse_pos):
-                    if self.player_piece != 'X': self.sound_manager.play_button_click()
-                    self.player_piece = 'X'
-                elif self.o_button_rect.collidepoint(mouse_pos):
-                    if self.player_piece != 'O': self.sound_manager.play_button_click()
-                    self.player_piece = 'O'
-                elif self.radio_player_first_rect.collidepoint(mouse_pos):
-                    if self.first_turn != 'player': self.sound_manager.play_button_click()
-                    self.first_turn = 'player'
-                elif self.radio_ai_first_rect.collidepoint(mouse_pos):
-                    if self.first_turn != 'ai': self.sound_manager.play_button_click()
-                    self.first_turn = 'ai'
-                elif self.easy_button_rect.collidepoint(mouse_pos):
-                    if self.difficulty != 'easy': self.sound_manager.play_button_click()
-                    self.difficulty = 'easy'
-                elif self.medium_button_rect.collidepoint(mouse_pos):
-                    if self.difficulty != 'medium': self.sound_manager.play_button_click()
-                    self.difficulty = 'medium'
-                elif self.hard_button_rect.collidepoint(mouse_pos):
-                    if self.difficulty != 'hard': self.sound_manager.play_button_click()
-                    self.difficulty = 'hard'
-                elif self.start_button.collidepoint(mouse_pos) and is_start_enabled:
-                    self.sound_manager.play_button_click()
-                    pygame.time.wait(100)
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-                    return self.player_name_input_box.get_text(), self.player_piece, self.first_turn, self.difficulty
-                elif self.back_button.collidepoint(mouse_pos):
-                    self.sound_manager.play_button_click()
-                    pygame.time.wait(100)
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-                    return 'back'
+            # --- Xử lý sự kiện cho các nút chọn quân cờ ---
+            if self.x_button.handle_event(event):
+                self.player_piece = 'X'
+                self._update_selection_buttons(self.x_button, self.piece_buttons)
+            if self.o_button.handle_event(event):
+                self.player_piece = 'O'
+                self._update_selection_buttons(self.o_button, self.piece_buttons)
+
+            # --- Xử lý sự kiện cho các nút chọn độ khó ---
+            if self.easy_button.handle_event(event):
+                self.difficulty = 'easy'
+                self._update_selection_buttons(self.easy_button, self.difficulty_buttons)
+            if self.medium_button.handle_event(event):
+                self.difficulty = 'medium'
+                self._update_selection_buttons(self.medium_button, self.difficulty_buttons)
+            if self.hard_button.handle_event(event):
+                self.difficulty = 'hard'
+                self._update_selection_buttons(self.hard_button, self.difficulty_buttons)
+
+            # --- Xử lý sự kiện cho các nút chọn lượt đi đầu ---
+            if self.player_first_button.handle_event(event):
+                self.first_turn = 'player'
+                self._update_selection_buttons(self.player_first_button, self.turn_buttons)
+            if self.ai_first_button.handle_event(event):
+                self.first_turn = 'ai'
+                self._update_selection_buttons(self.ai_first_button, self.turn_buttons)
+
+            # Xử lý sự kiện cho các nút Bắt đầu và Quay lại
+            if self.start_button.handle_event(event):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                return self.player_name_input_box.get_text(), self.player_piece, self.first_turn, self.difficulty
+            if self.back_button.handle_event(event):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                return 'back'
             
         # --- Vẽ các thành phần ---
         self.screen.fill(WHITE)
         self.screen.blit(self.background_img, (0, 0))
 
-        # Sử dụng CursorManager để xử lý con trỏ chuột
-        self.cursor_manager = CursorManager() # Reset mỗi frame
-        self.cursor_manager.add_text_input(self.player_name_input_box)
-        self.cursor_manager.add_clickable_area(self.start_button, is_start_enabled)
-        self.cursor_manager.add_clickable_area(self.back_button)
-        self.cursor_manager.add_clickable_area(self.x_button_rect)
-        self.cursor_manager.add_clickable_area(self.o_button_rect)
-        self.cursor_manager.add_clickable_area(self.easy_button_rect)
-        self.cursor_manager.add_clickable_area(self.medium_button_rect)
-        self.cursor_manager.add_clickable_area(self.hard_button_rect)
-        self.cursor_manager.update(mouse_pos)
-
-        super()._draw_section_title(self.screen, "Nhập tên của bạn:", TEXT_COLOR, self.font_label, 0, self.screen_width, align_left_of_box=None)
+        super()._draw_section_title(self.screen, "Nhập tên của bạn:", TEXT_COLOR, self.font_label, 50, self.screen_width, align_left_of_box=None)
         self.player_name_input_box.draw(self.screen)
 
         # Vẽ phần chọn quân cờ
-        super()._draw_section_title(self.screen, "Chọn quân cờ của bạn:", TEXT_COLOR, self.font_label, 180, self.screen_width)
-        super().draw_piece_button(self.screen, self.x_button_rect, self.x_img, self.player_piece, 'X', mouse_pos, YELLOW, SUPER_LIGHT_GRAY, DARK_WHITE)
-        super().draw_piece_button(self.screen, self.o_button_rect, self.o_img, self.player_piece, 'O', mouse_pos, YELLOW, SUPER_LIGHT_GRAY, DARK_WHITE)
+        mouse_pos = pygame.mouse.get_pos()
+        super()._draw_section_title(self.screen, "Chọn quân cờ của bạn:", TEXT_COLOR, self.font_label, 190, self.screen_width)
+        self.x_button.draw(self.screen)
+        self.o_button.draw(self.screen)
         
         # Vẽ phần chọn lượt đi
-        super()._draw_section_title(self.screen, "Chọn người đi trước:", TEXT_COLOR, self.font_label, 400, self.screen_width)
-        
-        # Vẽ các nút radio sử dụng hàm mới
-        super().draw_radio_button(self.screen, self.radio_player_first_rect.x + self.radio_button_radius, self.radio_player_first_rect.centery,
-                          self.radio_button_radius, self.first_turn == 'player', "Bạn đi trước", self.font_mode, TEXT_COLOR, YELLOW)
-        super().draw_radio_button(self.screen, self.radio_ai_first_rect.x + self.radio_button_radius, self.radio_ai_first_rect.centery,
-                          self.radio_button_radius, self.first_turn == 'ai', "Máy đi trước", self.font_mode, TEXT_COLOR, YELLOW)
+        super()._draw_section_title(self.screen, "Chọn người đi trước:", TEXT_COLOR, self.font_label, 410, self.screen_width)
+        self.player_first_button.draw(self.screen)
+        self.ai_first_button.draw(self.screen)
 
         # Vẽ phần chọn độ khó
-        super()._draw_section_title(self.screen, "Chọn độ khó:", TEXT_COLOR, self.font_label, 520, self.screen_width)
+        super()._draw_section_title(self.screen, "Chọn độ khó:", TEXT_COLOR, self.font_label, 540, self.screen_width)
+        self.easy_button.draw(self.screen)
+        self.medium_button.draw(self.screen)
+        self.hard_button.draw(self.screen)
 
-        # Nút dễ
-        super().draw_button(self.screen, self.easy_button_rect, YELLOW if self.difficulty == 'easy' else (LIGHT_GRAY if self.easy_button_rect.collidepoint(mouse_pos) else MEDIUM_GRAY), "Dễ", self.font_mode, TEXT_COLOR, 10)
+        # Vẽ các nút Bắt đầu và Quay lại
+        self.start_button.draw(self.screen)
+        self.back_button.draw(self.screen)
 
-        # Nút trung bình
-        super().draw_button(self.screen, self.medium_button_rect, YELLOW if self.difficulty == 'medium' else (LIGHT_GRAY if self.medium_button_rect.collidepoint(mouse_pos) else MEDIUM_GRAY), "Trung bình", self.font_mode, TEXT_COLOR, 10)
-
-        # Nút khó
-        super().draw_button(self.screen, self.hard_button_rect, YELLOW if self.difficulty == 'hard' else (LIGHT_GRAY if self.hard_button_rect.collidepoint(mouse_pos) else MEDIUM_GRAY), "Khó", self.font_mode, TEXT_COLOR, 10)
-
-        # Vẽ nút Bắt đầu và Quay lại
-        start_btn_color = (YELLOW_HOVER if self.start_button.collidepoint(mouse_pos) else YELLOW) if is_start_enabled else LIGHT_GRAY # Màu nền
-        start_text_color = TEXT_COLOR if is_start_enabled else WHITE # Màu chữ
-        super().draw_button(self.screen, self.start_button, start_btn_color, "Bắt đầu", self.font_button, start_text_color, 10)
-
-        back_btn_color = DARK_GRAY_HOVER if self.back_button.collidepoint(mouse_pos) else DARK_GRAY # Màu nền
-        super().draw_button(self.screen, self.back_button, back_btn_color, "Quay lại", self.font_button, WHITE, 10) # Màu chữ luôn là trắng
+        # Cập nhật con trỏ chuột
+        self.cursor_manager.add_clickable_area(self.start_button.rect, self.start_button.is_enabled)
+        self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
+        self.cursor_manager.add_clickable_area(self.x_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.o_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.player_first_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.ai_first_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.easy_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.medium_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.hard_button.rect, True)
+        self.cursor_manager.update(mouse_pos)
 
         pygame.display.flip()
 

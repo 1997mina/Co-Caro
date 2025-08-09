@@ -1,5 +1,8 @@
 import pygame
+
 from utils.ResourcePath import resource_path
+from manager.SoundManager import SoundManager
+from ui.components.Button import Button
 
 class InfoPanel:
     """
@@ -18,7 +21,7 @@ class InfoPanel:
         
         # Tải và thay đổi kích thước ảnh đại diện người chơi mặc định
         player_icon_size = 100
-        self.player_icon_img = pygame.image.load(resource_path('img/Player.png')).convert_alpha()
+        self.player_icon_img = pygame.image.load(resource_path('img/ingame/Player.png')).convert_alpha()
         self.player_icon_img = pygame.transform.smoothscale(self.player_icon_img, (player_icon_size, player_icon_size))
         
         # Fonts
@@ -36,25 +39,86 @@ class InfoPanel:
         self.timer_color = (60, 60, 60)
         self.timer_warning_color = (211, 47, 47) # Màu đỏ cảnh báo
         self.timer_inactive_color = (150, 150, 150) # Màu xám cho đồng hồ không hoạt động
-        self.pause_button_bg_color = (255, 255, 0) # Màu vàng cho nền nút tạm dừng
-        self.pause_button_border_color = (128, 128, 128) # Màu xám cho viền nút tạm dừng
 
-        # Nút tạm dừng (sử dụng hình ảnh)
-        self.pause_img = pygame.image.load(resource_path('img/Pause.png')).convert_alpha()
-        self.play_img = pygame.image.load(resource_path('img/Play.png')).convert_alpha()
-        self.button_img_size = 60
-        self.pause_img = pygame.transform.scale(self.pause_img, (self.button_img_size, self.button_img_size))
-        self.play_img = pygame.transform.scale(self.play_img, (self.button_img_size, self.button_img_size))
+        # Tải hình ảnh cho các nút
+        self.pause_img = pygame.image.load(resource_path('img/ingame/Pause.png')).convert_alpha()
+        self.play_img = pygame.image.load(resource_path('img/ingame/Play.png')).convert_alpha()
+        self.quit_img = pygame.image.load(resource_path('img/general/Quit.png')).convert_alpha()
+        self.hint_img = pygame.image.load(resource_path('img/ingame/Hint.png')).convert_alpha()
+
+        # Khởi tạo các nút
+        button_size = 70
+        icon_size_in_button = 40
+        self.icon_size_in_button = (icon_size_in_button, icon_size_in_button)
+        sound_manager = SoundManager()
         
-        # Tạo rect cho nút tạm dừng với kích thước và vị trí cố định
-        self.pause_button_rect = pygame.Rect(0, 0, self.button_img_size + 20, self.button_img_size + 20) # Thêm padding cho viền, sẽ dùng cho hình tròn
-        self.pause_button_rect.center = (self.rect.centerx, self.rect.height - 80)
+        buttons_y = self.rect.height - 80
+
+        # Nút Gợi ý
+        # Vị trí X sẽ được tính toán động, ở đây chỉ cần Y
+        self.hint_button = Button(0, buttons_y - button_size/2, button_size, button_size,
+                                  pygame.transform.smoothscale(self.hint_img, self.icon_size_in_button), sound_manager,
+                                  color=(100, 200, 255), hover_color=(130, 220, 255), pressed_color=(80, 180, 235))
+
+        # Nút Tạm dừng
+        self.pause_button = Button(0, buttons_y - button_size/2, button_size, button_size,
+                                   pygame.transform.smoothscale(self.pause_img, self.icon_size_in_button), sound_manager,
+                                   color=(255, 220, 0), hover_color=(255, 230, 50), pressed_color=(235, 200, 0))
+
+        # Nút Thoát
+        self.quit_button = Button(0, buttons_y - button_size/2, button_size, button_size,
+                                  pygame.transform.smoothscale(self.quit_img, self.icon_size_in_button), sound_manager,
+                                  color=(255, 100, 100), hover_color=(255, 130, 130), pressed_color=(235, 80, 80))
+
+        # Danh sách các nút sẽ được hiển thị, lớp con sẽ định nghĩa danh sách này
+        self.buttons_to_layout = []
+
+    def _draw_buttons(self, screen, current_player, paused):
+        """
+        Vẽ các nút điều khiển (Tạm dừng/Tiếp tục, Thoát, Gợi ý).
+        Các nút sẽ được tự động căn giữa và phân bố đều.
+        """
+        # Cập nhật icon cho nút Tạm dừng/Tiếp tục
+        if paused:
+            self.pause_button.icon_img = pygame.transform.smoothscale(self.play_img, self.icon_size_in_button)
+        else:
+            self.pause_button.icon_img = pygame.transform.smoothscale(self.pause_img, self.icon_size_in_button)
+
+        # --- Logic phân bố nút tự động ---
+        num_buttons = len(self.buttons_to_layout)
+        if num_buttons == 0:
+            return
+
+        button_width = self.buttons_to_layout[0].rect.width
+        button_spacing = 20  # Khoảng cách giữa các nút
+
+        total_width = (num_buttons * button_width) + ((num_buttons - 1) * button_spacing)
+        start_x = self.rect.centerx - (total_width / 2)
+
+        current_x = start_x
+        for button in self.buttons_to_layout:
+            # Cập nhật vị trí X của nút
+            button.rect.x = current_x
+            # Cập nhật vị trí bóng đổ tương ứng
+            button.shadow_rect = button.rect.copy().move(button.shadow_offset)
+            
+            button.draw(screen)
+            current_x += button_width + button_spacing
 
     def _draw_player_avatar(self, screen, player_name, player_area, y_cursor):
         """Vẽ ảnh đại diện mặc định cho người chơi. Lớp con có thể ghi đè."""
-        player_icon_rect = self.player_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
-        screen.blit(self.player_icon_img, player_icon_rect)
+        if player_name == "Máy tính":
+            player_icon_rect = self.ai_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
+        else:
+            player_icon_rect = self.player_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
+
+        screen.blit(self._get_player_icon(player_name), player_icon_rect)
         return player_icon_rect.bottom
+
+    def _get_player_icon(self, player_name):
+        """Trả về ảnh đại diện phù hợp cho người chơi."""
+        # Mặc định là ảnh người chơi, lớp con có thể ghi đè để thêm ảnh AI
+        return self.player_icon_img
 
     def _draw_player_info(self, screen, player_char, player_name, player_time, is_current_player, time_mode, player_area):
         """Vẽ thông tin cho một người chơi cụ thể trong khu vực được chỉ định."""
@@ -125,7 +189,7 @@ class InfoPanel:
         
         # --- Khu vực người chơi 1 ---
         p1_y = divider_y - margin_from_center - area_height
-        p1_area = pygame.Rect(self.rect.x + 10, divider_y - margin_from_center - area_height, area_width, area_height)
+        p1_area = pygame.Rect(self.rect.x + 10, p1_y, area_width, area_height)
         self._draw_player_info(screen, 'X', self.player_names['X'], remaining_times['X'], current_player == 'X', time_mode, p1_area)
 
         # --- Vẽ đường phân cách ---
@@ -136,10 +200,4 @@ class InfoPanel:
         p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height)
         self._draw_player_info(screen, 'O', self.player_names['O'], remaining_times['O'], current_player == 'O', time_mode, p2_area)
 
-        # --- Vẽ nút Tạm dừng/Tiếp tục (sử dụng hình ảnh) ---
-        pygame.draw.circle(screen, self.pause_button_bg_color, self.pause_button_rect.center, self.pause_button_rect.width // 2)
-        pygame.draw.circle(screen, self.pause_button_border_color, self.pause_button_rect.center, self.pause_button_rect.width // 2, 3)
-        if paused:
-            screen.blit(self.play_img, self.play_img.get_rect(center=self.pause_button_rect.center))
-        else:
-            screen.blit(self.pause_img, self.pause_img.get_rect(center=self.pause_button_rect.center))
+        self._draw_buttons(screen, current_player, paused)

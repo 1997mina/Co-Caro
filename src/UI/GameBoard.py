@@ -14,8 +14,8 @@ class GameBoard:
         img_size = self.cell_size - (2 * self.padding)
 
         # Tải hình ảnh X và O sử dụng resource_path
-        self.x_img = pygame.image.load(resource_path('img/X.png')).convert_alpha()
-        self.o_img = pygame.image.load(resource_path('img/O.png')).convert_alpha()
+        self.x_img = pygame.image.load(resource_path('img/general/X.png')).convert_alpha()
+        self.o_img = pygame.image.load(resource_path('img/general/O.png')).convert_alpha()
         self.x_img_scaled = pygame.transform.scale(self.x_img, (img_size, img_size))
         self.o_img_scaled = pygame.transform.scale(self.o_img, (img_size, img_size))
 
@@ -39,7 +39,7 @@ class GameBoard:
         """Xóa toàn bộ bàn cờ để bắt đầu ván mới."""
         self.board = [['' for _ in range(self.board_width_cells)] for _ in range(self.board_height_cells)]
 
-    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None):
+    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, hint_cell=None):
         """Vẽ bàn cờ và các quân cờ X, O."""
         # Vẽ PlayerInfoPanel
         self.player_info_panel.draw(screen, current_player, remaining_times, time_mode, paused)
@@ -52,6 +52,14 @@ class GameBoard:
             r, c = last_move
             highlight_rect = pygame.Rect(board_offset_x + c * self.cell_size, r * self.cell_size, self.cell_size, self.cell_size)
             pygame.draw.rect(screen, (180, 180, 180), highlight_rect) # Màu xám đậm hơn
+
+        # Vẽ highlight cho ô được gợi ý (vẽ nền trước)
+        if hint_cell:
+            r, c = hint_cell
+            # Tạo một surface bán trong suốt để vẽ highlight
+            hint_surface = pygame.Surface((self.cell_size, self.cell_size), pygame.SRCALPHA)
+            hint_surface.fill((0, 255, 0, 120))  # Màu xanh lá, 120/255 độ trong suốt
+            screen.blit(hint_surface, (board_offset_x + c * self.cell_size, r * self.cell_size))
 
         for row in range(self.board_height_cells):
             for col in range(self.board_width_cells):

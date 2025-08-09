@@ -1,5 +1,4 @@
 import pygame
-from ui.components.InputBox import InputBox
 
 class CursorManager:
     """
@@ -9,6 +8,14 @@ class CursorManager:
     def __init__(self):
         self.clickable_areas = []  # Dành cho con trỏ HAND
         self.text_inputs = []      # Dành cho con trỏ IBEAM
+
+    def reset(self):
+        """
+        Đặt lại danh sách các khu vực có thể click và ô nhập liệu.
+        Nên được gọi khi chuyển đổi giữa các màn hình hoặc trạng thái game.
+        """
+        self.clickable_areas = []
+        self.text_inputs = []
 
     def add_clickable_area(self, rect, condition=True):
         """
@@ -41,7 +48,12 @@ class CursorManager:
 
         # 2. Nếu không phải ô nhập liệu, kiểm tra các khu vực có thể click
         for area in self.clickable_areas:
-            if area.collidepoint(mouse_pos):
+            # Kiểm tra nếu 'area' là một đối tượng Button, sử dụng thuộc tính .rect của nó
+            if hasattr(area, 'rect'):
+                if area.rect.collidepoint(mouse_pos):
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+                    return # Đã xử lý, thoát sớm
+            elif area.collidepoint(mouse_pos): # Nếu 'area' là một pygame.Rect
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
                 return # Đã xử lý, thoát sớm
 

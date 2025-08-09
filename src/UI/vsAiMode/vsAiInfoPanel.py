@@ -9,22 +9,28 @@ class vsAiInfoPanel(InfoPanel):
     """
     def __init__(self, rect, player_names, x_img, o_img):
         self.rect = rect
-        self.player_names = player_names
-        
+
         # Tạo phiên bản ảnh nhỏ hơn cho panel
         super().__init__(rect, player_names, x_img, o_img)
-        
+        self.buttons_to_layout = [self.hint_button, self.pause_button, self.quit_button]
+
         # Tải và thay đổi kích thước ảnh đại diện người chơi
         player_icon_size = 100
-        self.ai_icon_img = pygame.image.load(resource_path('img/Computer.png')).convert_alpha() # Ảnh đại diện cho máy
+        self.ai_icon_img = pygame.image.load(resource_path('img/ingame/Computer.png')).convert_alpha() # Ảnh đại diện cho máy
         self.ai_icon_img = pygame.transform.smoothscale(self.ai_icon_img, (player_icon_size, player_icon_size))
-        
-    def _get_player_icon(self, player_name):
-        return self.ai_icon_img if player_name == "Máy tính" else self.player_icon_img
 
-    def _draw_player_avatar(self, screen, player_name, player_area, y_cursor):
-        """Ghi đè phương thức vẽ avatar để sử dụng icon AI nếu tên là 'Máy tính'."""
-        icon_to_draw = self._get_player_icon(player_name)
-        player_icon_rect = icon_to_draw.get_rect(centerx=player_area.centerx, top=y_cursor)
-        screen.blit(icon_to_draw, player_icon_rect)
-        return player_icon_rect.bottom
+    def _get_player_icon(self, player_name):
+        """Trả về ảnh đại diện phù hợp cho người chơi, bao gồm cả AI."""
+        if player_name == "Máy tính":
+            return self.ai_icon_img
+        return self.player_icon_img
+
+    def draw(self, screen, current_player, remaining_times, time_mode, paused):
+        # Gọi phương thức draw của lớp cha
+        super().draw(screen, current_player, remaining_times, time_mode, paused)
+
+        # Xác định người chơi là AI
+        ai_player_char = 'X' if self.player_names['X'] == "Máy tính" else 'O'
+        
+        # Bật nút gợi ý nếu không tạm dừng và đang là lượt của người chơi
+        self.hint_button.is_enabled = not paused and current_player != ai_player_char # Vô hiệu hóa nút gợi ý khi AI đang suy nghĩ

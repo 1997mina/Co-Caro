@@ -1,17 +1,21 @@
 import pygame
 
 from manager.SoundManager import SoundManager
+from ui.components.Button import Button
 
 # Hằng số cho màu sắc và font chữ
 BG_COLOR = (255, 255, 255)
 TEXT_COLOR = (40, 40, 40)
-WINNER_TEXT = (255, 200, 0) # Màu vàng
-WINNER_COLOR = (0, 150, 136)  # Màu xanh lá cây
-BUTTON_COLOR = (0, 150, 136)
-BUTTON_TEXT_COLOR = (255, 255, 255)
-QUIT_BUTTON_COLOR = (211, 47, 47)  # Màu đỏ
-STAY_BUTTON_COLOR = (100, 100, 100) # Màu xám
+WINNER_TEXT = (255, 200, 0) # Màu vàng cho chữ "thắng/hòa"
 
+# Màu sắc cho nút
+BUTTON_TEXT_COLOR = (255, 255, 255)
+PLAY_AGAIN_COLOR = (0, 150, 136)
+PLAY_AGAIN_HOVER_COLOR = (0, 180, 160)
+PLAY_AGAIN_PRESSED_COLOR = (0, 130, 116)
+QUIT_COLOR = (211, 47, 47)
+QUIT_HOVER_COLOR = (255, 80, 80)
+QUIT_PRESSED_COLOR = (190, 30, 30)
 
 def show_end_screen(screen, winner_name, board_rect):
     """
@@ -28,34 +32,35 @@ def show_end_screen(screen, winner_name, board_rect):
     overlay = pygame.Surface(board_rect.size, pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 128))  # Màu đen bán trong suốt
     
-    # Định nghĩa các nút, vị trí được căn giữa khu vực bàn cờ
+    # Khởi tạo các nút bằng lớp Button
     button_width, button_height = 300, 60
-    
-    # Nút "Chơi lại"
-    play_again_button = pygame.Rect(0, 0, button_width, button_height)
-    play_again_button.center = (board_rect.centerx, board_rect.centery)
-    
-    # Nút "Thoát"
-    quit_button = pygame.Rect(0, 0, button_width, button_height)
-    quit_button.center = (board_rect.centerx, board_rect.centery + 80)
-
     sound_manager = SoundManager()
+    
+    play_again_button = Button(
+        board_rect.centerx - button_width / 2, board_rect.centery - button_height / 2,
+        button_width, button_height,
+        font_button.render("Chơi lại", True, BUTTON_TEXT_COLOR), sound_manager,
+        color=PLAY_AGAIN_COLOR, hover_color=PLAY_AGAIN_HOVER_COLOR, pressed_color=PLAY_AGAIN_PRESSED_COLOR, 
+        border_radius=10
+    )
+    quit_button = Button(
+        board_rect.centerx - button_width / 2, board_rect.centery + 80 - button_height / 2,
+        button_width, button_height,
+        font_button.render("Thoát", True, BUTTON_TEXT_COLOR), sound_manager,
+        color=QUIT_COLOR, hover_color=QUIT_HOVER_COLOR, pressed_color=QUIT_PRESSED_COLOR,
+        border_radius=10
+    )
 
     # Vòng lặp riêng cho màn hình kết thúc
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False  # Coi việc đóng cửa sổ là thoát
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if play_again_button.collidepoint(event.pos):
-                    sound_manager.play_button_click()
-                    pygame.time.wait(100)
-                    return True  # Chơi lại
-                if quit_button.collidepoint(event.pos):
-                    sound_manager.play_button_click()
-                    pygame.time.wait(100)
-                    return False  # Thoát
+            
+            if play_again_button.handle_event(event):
+                return True # Chơi lại
+            if quit_button.handle_event(event):
+                return False # Thoát
 
         # Vẽ lại nền gốc và lớp phủ chỉ trên bàn cờ
         screen.blit(background, (0, 0))
@@ -67,15 +72,9 @@ def show_end_screen(screen, winner_name, board_rect):
         text_rect = text_surf.get_rect(center=(board_rect.centerx, board_rect.centery - 100))
         screen.blit(text_surf, text_rect)
 
-        # Vẽ nút "Chơi lại"
-        pygame.draw.rect(screen, BUTTON_COLOR, play_again_button, border_radius=10)
-        button_text_surf = font_button.render("Chơi lại", True, BUTTON_TEXT_COLOR)
-        screen.blit(button_text_surf, button_text_surf.get_rect(center=play_again_button.center))
-
-        # Vẽ nút "Thoát"
-        pygame.draw.rect(screen, QUIT_BUTTON_COLOR, quit_button, border_radius=10)
-        quit_text_surf = font_button.render("Thoát", True, BUTTON_TEXT_COLOR)
-        screen.blit(quit_text_surf, quit_text_surf.get_rect(center=quit_button.center))
+        # Vẽ các nút
+        play_again_button.draw(screen)
+        quit_button.draw(screen)
 
         pygame.display.flip()
 
@@ -91,29 +90,34 @@ def show_quit_confirmation_dialog(screen, board_rect):
     overlay = pygame.Surface(board_rect.size, pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 128))
 
+    sound_manager = SoundManager()
     button_width, button_height = 250, 60
     
-    # Nút "Thoát"
-    quit_button = pygame.Rect(0, 0, button_width, button_height)
-    quit_button.center = (board_rect.centerx, board_rect.centery)
-    
-    # Nút "Ở lại"
-    stay_button = pygame.Rect(0, 0, button_width, button_height)
-    stay_button.center = (board_rect.centerx, board_rect.centery + 80)
-
-    sound_manager = SoundManager()
+    # Khởi tạo các nút bằng lớp Button
+    quit_button = Button(
+        board_rect.centerx - button_width / 2, board_rect.centery - button_height / 2,
+        button_width, button_height,
+        font_button.render("Thoát", True, BUTTON_TEXT_COLOR), sound_manager,
+        color=QUIT_COLOR, hover_color=QUIT_HOVER_COLOR, pressed_color=QUIT_PRESSED_COLOR,
+        border_radius=10
+    )
+    stay_button = Button(
+        board_rect.centerx - button_width / 2, board_rect.centery + 80 - button_height / 2,
+        button_width, button_height,
+        font_button.render("Ở lại", True, BUTTON_TEXT_COLOR), sound_manager,
+        color=(100, 100, 100), hover_color=(130, 130, 130), pressed_color=(80, 80, 80),
+        border_radius=10
+    )
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False # Đóng cửa sổ = hủy bỏ
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if quit_button.collidepoint(event.pos):
-                    sound_manager.play_button_click()
-                    return True # Xác nhận thoát
-                if stay_button.collidepoint(event.pos):
-                    sound_manager.play_button_click()
-                    return False # Hủy bỏ
+            
+            if quit_button.handle_event(event):
+                return True # Xác nhận thoát
+            if stay_button.handle_event(event):
+                return False # Hủy bỏ
 
         screen.blit(background, (0, 0))
         screen.blit(overlay, board_rect.topleft)
@@ -123,9 +127,8 @@ def show_quit_confirmation_dialog(screen, board_rect):
         text_rect = text_surf.get_rect(center=(board_rect.centerx, board_rect.centery - 80))
         screen.blit(text_surf, text_rect)
 
-        pygame.draw.rect(screen, QUIT_BUTTON_COLOR, quit_button, border_radius=10)
-        pygame.draw.rect(screen, STAY_BUTTON_COLOR, stay_button, border_radius=10)
-        screen.blit(font_button.render("Thoát", True, BUTTON_TEXT_COLOR), font_button.render("Thoát", True, BUTTON_TEXT_COLOR).get_rect(center=quit_button.center))
-        screen.blit(font_button.render("Ở lại", True, BUTTON_TEXT_COLOR), font_button.render("Ở lại", True, BUTTON_TEXT_COLOR).get_rect(center=stay_button.center))
+        # Vẽ các nút
+        quit_button.draw(screen)
+        stay_button.draw(screen)
 
         pygame.display.flip()

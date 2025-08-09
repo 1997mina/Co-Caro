@@ -32,12 +32,9 @@ class GameStateManager:
     def handle_event(self, event, timer, board):
         """Xử lý các sự kiện liên quan đến trạng thái game (ví dụ: click nút tạm dừng)."""
         # Chỉ xử lý sự kiện tạm dừng khi game chưa kết thúc
-        if not self.game_over:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if board.player_info_panel.pause_button_rect.collidepoint(event.pos):
-                    self.sound_manager.play_button_click()
-                    self.toggle_pause(timer)
-                    return True # Sự kiện đã được xử lý
+        if not self.game_over and board.player_info_panel.pause_button.handle_event(event):
+            self.toggle_pause(timer)
+            return True # Sự kiện đã được xử lý
         return False # Sự kiện chưa được xử lý
 
     def draw_overlay(self):

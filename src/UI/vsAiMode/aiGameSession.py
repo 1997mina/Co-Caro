@@ -96,7 +96,7 @@ def start_ai_game_session(screen):
                 # Hàm mục tiêu cho luồng AI
                 def run_ai_calculation():
                     nonlocal ai_move_result
-                    ai_move_result = ai.find_best_move(game_logic, is_first_move, 10) # Đặt giới hạn 8 giây
+                    ai_move_result = ai.find_best_move(game_logic, is_first_move) # Đặt giới hạn 8 giây
 
                 ai_thread = threading.Thread(target=run_ai_calculation)
                 ai_thread.start()

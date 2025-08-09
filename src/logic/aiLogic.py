@@ -1,6 +1,5 @@
 import random
 import math
-import time
 
 class AIPlayer:
     """
@@ -40,17 +39,19 @@ class AIPlayer:
     def set_difficulty(self, difficulty):
         """Đặt độ khó cho AI."""
         self.difficulty = difficulty
-        if difficulty == 'easy':
-            self.SEARCH_DEPTH = 1 # Độ sâu thấp
-            self.MAX_MOVES_TO_CONSIDER = 10 # Chỉ xét 10 nước đi tiềm năng nhất
-        elif difficulty == 'medium':
-            self.SEARCH_DEPTH = 2 # Độ sâu trung bình
-            self.MAX_MOVES_TO_CONSIDER = 20 # Xét 15 nước
-        elif difficulty == 'hard':
-            self.SEARCH_DEPTH = 3 # Độ sâu cao
-            self.MAX_MOVES_TO_CONSIDER = 30 # Xét 20 nước
+        self.SEARCH_DEPTH = 1 # Giữ nguyên độ sâu tìm kiếm là 1 cho mọi cấp độ
 
-    def find_best_move(self, board_logic, is_first_move=False, time_limit=8):
+        if difficulty == 'easy':
+            self.MAX_MOVES_TO_CONSIDER = 8  # Chỉ xét 8 nước đi tiềm năng nhất
+            self.blunder_chance = 0.35      # 35% cơ hội mắc lỗi (chọn nước ngẫu nhiên)
+        elif difficulty == 'medium':
+            self.MAX_MOVES_TO_CONSIDER = 15 # Xét 15 nước
+            self.blunder_chance = 0.10      # 10% cơ hội mắc lỗi
+        elif difficulty == 'hard':
+            self.MAX_MOVES_TO_CONSIDER = 30 # Xét 30 nước
+            self.blunder_chance = 0         # 0% cơ hội mắc lỗi, luôn chọn nước tốt nhất
+
+    def find_best_move(self, board_logic, is_first_move=False):
         """
         Tìm và trả về tọa độ (hàng, cột) của nước đi tốt nhất.
         Sử dụng Minimax với cắt tỉa Alpha-Beta.
@@ -63,8 +64,6 @@ class AIPlayer:
         if is_first_move:
             center_r, center_c = board_logic.height // 2, board_logic.width // 2
             return (center_r, center_c)
-
-        start_time = time.time()
 
         possible_moves = self._get_possible_moves(board_logic)
         if not possible_moves:
@@ -93,11 +92,6 @@ class AIPlayer:
 
         # 3. Chạy Minimax trên danh sách đã được sắp xếp và giới hạn
         for move in sorted_moves:
-            # Kiểm tra giới hạn thời gian trong mỗi vòng lặp
-            if time.time() - start_time > time_limit:
-                print(f"AI: Hết thời gian ({time_limit}s), trả về nước đi tốt nhất đã tìm thấy.")
-                break # Dừng tìm kiếm nếu hết giờ
-
             r, c = move
             board_logic.board[r][c] = self.AI_SYMBOL
             # Gọi minimax với độ sâu đã được cấu hình
@@ -114,10 +108,16 @@ class AIPlayer:
         if top_moves:
             best_move = random.choice(top_moves)
         
-        # Nếu không tìm được nước đi nào (ví dụ: hết giờ ngay từ đầu),
-        # trả về nước đi đầu tiên trong danh sách đã sắp xếp.
-        return best_move or (sorted_moves[0] if sorted_moves else None)
-
+        # --- Logic mắc lỗi (Blunder) dựa trên độ khó ---
+        # Nếu một số ngẫu nhiên nhỏ hơn tỷ lệ mắc lỗi, AI sẽ chọn một nước đi ngẫu nhiên thay vì nước tốt nhất.
+        if random.random() < self.blunder_chance and possible_moves:
+            print(f"AI ({self.difficulty}): Oops! Making a random move.")
+            return random.choice(possible_moves)
+        else:
+            # Nếu không mắc lỗi, trả về nước đi tốt nhất đã tìm thấy.
+            # Nếu không tìm được (ví dụ: hết giờ), trả về nước đi đầu tiên trong danh sách đã sắp xếp.
+            return best_move or (sorted_moves[0] if sorted_moves else None)
+        
     def _minimax(self, board_logic, depth, alpha, beta, is_maximizing_player):
         """Thuật toán Minimax với cắt tỉa Alpha-Beta."""
         if depth == 0 or board_logic.check_win_from_any_position(self.AI_SYMBOL) or board_logic.check_win_from_any_position(self.HUMAN_SYMBOL):
@@ -160,7 +160,6 @@ class AIPlayer:
         score = 0
         ai_count = window.count(self.AI_SYMBOL)
         human_count = window.count(self.HUMAN_SYMBOL)
-        empty_count = window.count('')
 
         # Nếu cửa sổ có cả quân của AI và người chơi -> không có tiềm năng -> 0 điểm
         if ai_count > 0 and human_count > 0:

@@ -45,7 +45,7 @@ class InfoPanel:
         self.score_box_border_color = (120, 120, 120)
         
         # Khởi tạo ScoreIndicator
-        score_indicator_rect = pygame.Rect(self.rect.x, self.rect.bottom - 250, self.rect.width, 150)
+        score_indicator_rect = pygame.Rect(self.rect.x, self.rect.bottom - 225, self.rect.width, 150)
         score_indicator_colors = {'text': self.text_color, 'fill': self.score_box_fill_color, 'border': self.score_box_border_color}
         self.score_indicator = ScoreIndicator(score_indicator_rect, self.font_score_title, self.font_timer, score_indicator_colors, x_img, o_img)
 
@@ -193,7 +193,7 @@ class InfoPanel:
             turn_rect = turn_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
             screen.blit(turn_surf, turn_rect)
 
-    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, match_history=None):
+    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, match_history=None, difficulty=None):
         """
         Vẽ toàn bộ bảng thông tin.
         """
@@ -218,7 +218,7 @@ class InfoPanel:
         p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height) # Vị trí và kích thước vùng vẽ thông tin người chơi O
         self._draw_player_info(screen, 'O', self.player_names['O'], 0, remaining_times['O'], current_player == 'O', time_mode, p2_area)
 
-        # Vẽ ScoreIndicator nếu có lịch sử đấu
+        # Vẽ ScoreIndicator
         if match_history is not None:
             self.score_indicator.draw(screen, match_history)
 

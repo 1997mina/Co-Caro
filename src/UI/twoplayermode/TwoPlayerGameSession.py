@@ -2,6 +2,7 @@ import pygame
 
 from logic.BoardLogic import BoardLogic
 from manager.GameStateManager import GameStateManager
+from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
 from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
@@ -52,6 +53,7 @@ def start_two_players_session(screen):
 
     # --- Khởi tạo trình quản lý âm thanh ---
     sound_manager = SoundManager()
+    cursor_manager = CursorManager()
 
     # --- Khởi tạo trình quản lý trạng thái game ---
     game_state = GameStateManager(screen, board_rect, sound_manager)
@@ -126,6 +128,14 @@ def start_two_players_session(screen):
                                 current_player = 'O' if current_player == 'X' else 'X'
                             # Chuyển lượt cho timer
                             timer.switch_turn(current_player)
+        
+        # --- Cập nhật con trỏ chuột ---
+        cursor_manager.reset()
+        # Đăng ký các nút từ InfoPanel
+        for button in board.player_info_panel.buttons_to_layout:
+            cursor_manager.add_clickable_area(button.rect, button.is_enabled)
+        # Cập nhật trạng thái con trỏ
+        cursor_manager.update(pygame.mouse.get_pos())
         
         screen.fill((255, 255, 255))
         # Lấy thời gian còn lại của cả hai người chơi để hiển thị

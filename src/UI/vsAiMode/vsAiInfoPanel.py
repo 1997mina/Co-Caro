@@ -11,6 +11,7 @@ class vsAiInfoPanel(InfoPanel):
         # Gọi constructor của lớp cha để khởi tạo các thuộc tính chung
         super().__init__(rect, player_names, x_img, o_img)
         self.highlight_color = (255, 213, 79) # Màu vàng nhạt
+        self.font_difficulty = pygame.font.SysFont("Times New Roman", 26, bold=True)
         self.buttons_to_layout = [self.hint_button, self.pause_button, self.quit_button]
 
         # Tải và thay đổi kích thước ảnh đại diện người chơi
@@ -24,12 +25,24 @@ class vsAiInfoPanel(InfoPanel):
             return self.ai_icon_img
         return self.player_icon_img
 
-    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, match_history=None):
+    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, match_history=None, difficulty=None):
         # Gọi phương thức draw của lớp cha
-        super().draw(screen, current_player, remaining_times, time_mode, paused, winning_cells, last_move, match_history)
+        super().draw(screen, current_player, remaining_times, time_mode, paused, winning_cells, last_move, match_history, difficulty)
 
-        # Xác định người chơi là AI
-        ai_player_char = 'X' if self.player_names['X'] == "Máy tính" else 'O'
-        
-        # Bật nút gợi ý nếu không tạm dừng và đang là lượt của người chơi
-        self.hint_button.is_enabled = not paused and current_player != ai_player_char # Vô hiệu hóa nút gợi ý khi AI đang suy nghĩ
+        # Hiển thị độ khó
+        if difficulty:
+            difficulty_text = f"Độ khó: {self._get_vietnamese_difficulty(difficulty)}" # Màu đỏ cảnh báo
+            difficulty_surf = self.font_difficulty.render(difficulty_text, True, self.timer_warning_color)
+            # Đặt vị trí ngay trên ScoreIndicator
+            difficulty_rect = difficulty_surf.get_rect(centerx=self.rect.centerx, y=self.score_indicator.rect.y - difficulty_surf.get_height() - 10)
+            screen.blit(difficulty_surf, difficulty_rect)
+
+    def _get_vietnamese_difficulty(self, difficulty_en):
+        """Chuyển đổi độ khó tiếng Anh sang tiếng Việt."""
+        if difficulty_en == 'easy':
+            return 'Dễ'
+        elif difficulty_en == 'medium':
+            return 'Trung bình'
+        elif difficulty_en == 'hard':
+            return 'Khó'
+        return difficulty_en # Trả về nguyên bản nếu không khớp

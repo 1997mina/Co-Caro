@@ -4,6 +4,7 @@ import threading
 from logic.BoardLogic import BoardLogic
 from logic.aiLogic import AIPlayer
 from manager.GameStateManager import GameStateManager
+from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
 from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
@@ -67,6 +68,7 @@ def start_ai_game_session(screen):
     # --- Khởi tạo các trình quản lý ---
     sound_manager = SoundManager()
     game_state = GameStateManager(screen, board_rect, sound_manager)
+    cursor_manager = CursorManager()
     timer = TimerManager(time_limit, time_mode, ai_player=ai_player_char)
     
     timer.switch_turn(current_player)
@@ -74,6 +76,7 @@ def start_ai_game_session(screen):
     winning_cells = []
     last_move = None # Lưu tọa độ nước đi cuối cùng
     hint_cell = None # Lưu tọa độ ô được gợi ý
+    hint_used_this_round = False # Cờ để theo dõi việc sử dụng gợi ý
     
     # Biến để quản lý luồng của AI
     ai.set_difficulty(difficulty)
@@ -153,6 +156,7 @@ def start_ai_game_session(screen):
             # --- Xử lý click nút Gợi ý ---
             if game_state.is_playing() and current_player == human_player_char:
                 if board.player_info_panel.hint_button.handle_event(event):
+                    hint_used_this_round = True # Đánh dấu là đã sử dụng gợi ý
                     # AI sẽ tìm nước đi tốt nhất cho người chơi hiện tại (là con người)
                     # Để làm điều này, chúng ta tạm thời coi AI là người chơi hiện tại
                     # và tìm nước đi tốt nhất cho "mình"
@@ -199,12 +203,28 @@ def start_ai_game_session(screen):
                                 current_player = ai_player_char
                                 timer.switch_turn(current_player)
 
+        # --- Cập nhật trạng thái nút Gợi ý ---
+        # Nút gợi ý chỉ được bật khi:
+        # 1. Game đang diễn ra (không tạm dừng, không kết thúc)
+        # 2. Đến lượt của người chơi
+        # 3. Gợi ý chưa được sử dụng trong ván này
+        is_hint_available = game_state.is_playing() and current_player == human_player_char and not hint_used_this_round
+        board.player_info_panel.hint_button.is_enabled = is_hint_available
+
+        # --- Cập nhật con trỏ chuột ---
+        cursor_manager.reset()
+        # Đăng ký các nút từ InfoPanel
+        for button in board.player_info_panel.buttons_to_layout:
+            cursor_manager.add_clickable_area(button.rect, button.is_enabled)
+        # Cập nhật trạng thái con trỏ
+        cursor_manager.update(pygame.mouse.get_pos())
+
         # --- Vẽ màn hình ---
         screen.fill((255, 255, 255))
         remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
         board.draw(screen, current_player, 
                    remaining_times, time_mode, game_state.is_paused(),
-                   winning_cells, last_move, match_history, hint_cell)
+                   winning_cells, last_move, match_history, hint_cell, difficulty)
         game_state.draw_overlay()
 
         if game_state.game_over:
@@ -232,6 +252,7 @@ def start_ai_game_session(screen):
                 game_state.reset()
                 current_player = initial_player # Quay về người đi đầu của ván
                 winner = None
+                hint_used_this_round = False # Reset cờ gợi ý cho ván mới
                 hint_cell = None
                 last_move = None
                 winning_cells = []

@@ -4,7 +4,7 @@ from logic.BoardLogic import BoardLogic
 from manager.GameStateManager import GameStateManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
-from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog
+from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
 from ui.GameBoard import GameBoard
 from ui.twoplayermode.TwoPlayerSetting import get_two_player_setting
 from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
@@ -22,7 +22,10 @@ def start_two_players_session(screen):
         return
     player1_name, player2_name, time_mode, time_limit = player_data
     player_names = {'X': player1_name, 'O': player2_name}
-    
+
+    # Khởi tạo lịch sử các ván đấu
+    match_history = []
+
     # Tính toán kích thước để đảm bảo các ô cờ vừa khít và không có khoảng trống
     cell_size = 40
     board_height_cells = screen_height // cell_size
@@ -67,6 +70,9 @@ def start_two_players_session(screen):
                 game_state.set_game_over(True)
                 winner = 'O' if current_player == 'X' else 'X'
                 sound_manager.play_game_over()
+                # Cập nhật lịch sử đấu ngay lập tức
+                if len(match_history) < 5:
+                    match_history.append(winner)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -108,6 +114,9 @@ def start_two_players_session(screen):
                                 game_state.set_game_over(True)
                                 sound_manager.play_game_over()
                                 winning_cells = winning_line
+                                # Cập nhật lịch sử đấu ngay lập tức
+                                if len(match_history) < 5:
+                                    match_history.append(winner)
                             # Kiểm tra hòa
                             elif game_logic.is_board_full(board.board):
                                 winner = "Draw"
@@ -120,21 +129,37 @@ def start_two_players_session(screen):
         
         screen.fill((255, 255, 255))
         # Lấy thời gian còn lại của cả hai người chơi để hiển thị
-        remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}
-        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells, last_move)
+        remaining_times = {'X': timer.get_remaining_time('X'), 'O': timer.get_remaining_time('O')}        
+        board.draw(screen, current_player, remaining_times, time_mode, game_state.is_paused(), winning_cells, last_move, match_history)
 
         # Vẽ màn hình overlay nếu game đang tạm dừng
         game_state.draw_overlay()
 
         # Hiển thị thông báo khi game kết thúc
-        if game_state.game_over:
+        if game_state.game_over: 
             if winner == "Draw":
-                winner_display_name = "Draw"
+                winner_display_name = "Hòa"
             else:
+                # Lịch sử đã được cập nhật, chỉ cần lấy tên hiển thị
                 winner_display_name = player_names.get(winner, "Unknown")
+
+            # --- KIỂM TRA NGƯỜI THẮNG CHUNG CUỘC ---
+            wins_X = match_history.count('X')
+            wins_O = match_history.count('O')
+            overall_winner = None
+            if wins_X >= 3:
+                overall_winner = 'X'
+            elif wins_O >= 3:
+                overall_winner = 'O'
+            
+            if overall_winner:
+                final_winner_name = player_names.get(overall_winner, "Unknown")
+                show_final_victory_screen(screen, final_winner_name, board_rect, match_history, board.x_img, board.o_img)
+                running = False # Kết thúc phiên chơi
+                continue # Bỏ qua phần còn lại của vòng lặp
             
             # Hiển thị màn hình kết thúc và chờ lựa chọn của người dùng
-            play_again = show_end_screen(screen, winner_display_name, board_rect)
+            play_again = show_end_screen(screen, winner_display_name, board_rect, match_history, board.x_img, board.o_img)
 
             if play_again:
                 # Thiết lập lại trạng thái game để bắt đầu ván mới

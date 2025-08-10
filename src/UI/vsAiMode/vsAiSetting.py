@@ -29,11 +29,12 @@ class VsAiSetting(SettingUI):
         self.o_img = pygame.transform.scale(pygame.image.load(resource_path('img/general/O.png')).convert_alpha(), (img_size, img_size))
 
         # --- Ô nhập tên người chơi (sử dụng lớp InputBox) ---
-        input_box_width = 500
+        input_box_width = 400 # Giảm chiều rộng để có chỗ cho nút Dán
         self.player_name_input_box = InputBox(
             self.screen_width / 2 - input_box_width / 2, 80, input_box_width, 50,
             self.font_label, TEXT_COLOR, DARK_GRAY, DARK_WHITE
         )
+        self.player_name_input_box._create_paste_button(self.sound_manager) # Khởi tạo nút Dán
 
         # --- Trạng thái và các thành phần UI ---
         self.player_piece = None  # 'X' hoặc 'O'
@@ -103,7 +104,7 @@ class VsAiSetting(SettingUI):
         
         self.start_button = Button(
             start_button_x, start_button_y, button_width, button_height,
-            self.font_button.render("Bắt đầu", True, WHITE), self.sound_manager,
+            self.font_button.render("Bắt đầu", True, TEXT_COLOR), self.sound_manager,
             color=YELLOW, hover_color=YELLOW_HOVER, pressed_color=YELLOW_HOVER,
             disabled_color=LIGHT_GRAY, border_radius=10
         )
@@ -202,6 +203,9 @@ class VsAiSetting(SettingUI):
         # Vẽ các nút Bắt đầu và Quay lại
         self.start_button.draw(self.screen)
         self.back_button.draw(self.screen)
+
+        # Cập nhật con trỏ chuột cho InputBox
+        self.player_name_input_box.handle_mouse_cursor(mouse_pos)
 
         # Cập nhật con trỏ chuột
         self.cursor_manager.add_clickable_area(self.start_button.rect, self.start_button.is_enabled)

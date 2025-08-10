@@ -43,17 +43,19 @@ class TwoPlayerSetting(SettingUI):
         self.input_box1_ui = InputBox(self.input_box1.x, self.input_box1.y
                                       , self.input_box1.width, self.input_box1.height, 
                                       self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200))
+        self.input_box1_ui._create_paste_button(self.sound_manager)
         self.input_box2_ui = InputBox(self.input_box2.x, self.input_box2.y, 
                                       self.input_box2.width, self.input_box2.height, 
                                       self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200))
-
-        # Vị trí ban đầu của X và O để kéo
+        self.input_box2_ui._create_paste_button(self.sound_manager)
+        
+        # Vị trí ban đầu của X và O để kéo (đã điều chỉnh để có chỗ cho nút Dán)
         x_drag_rect_initial_center = (self.screen_width / 2 - 100, 400)
         o_drag_rect_initial_center = (self.screen_width / 2 + 100, 400)
-
+        
         # Vị trí thả cho người chơi 1 và 2
-        self.drop_target1 = pygame.Rect(self.input_box1.x + self.input_box1.width + 20, self.input_box1.y, self.img_size, self.img_size)
-        self.drop_target2 = pygame.Rect(self.input_box2.x + self.input_box2.width + 20, self.input_box2.y, self.img_size, self.img_size)
+        self.drop_target1 = pygame.Rect(self.input_box1_ui.paste_button.rect.right + 15, self.input_box1.y, self.img_size, self.img_size)
+        self.drop_target2 = pygame.Rect(self.input_box2_ui.paste_button.rect.right + 15, self.input_box2.y, self.img_size, self.img_size)
 
         # Khởi tạo trình xử lý kéo thả quân cờ
         self.drag_handler = PieceDragHandler(self.x_img, self.o_img, x_drag_rect_initial_center, o_drag_rect_initial_center, self.drop_target1, self.drop_target2)
@@ -209,6 +211,8 @@ class TwoPlayerSetting(SettingUI):
         self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.turn_based_button.rect, True)
         self.cursor_manager.add_clickable_area(self.total_time_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.input_box1_ui.paste_button.rect, self.input_box1_ui.paste_button.is_enabled)
+        self.cursor_manager.add_clickable_area(self.input_box2_ui.paste_button.rect, self.input_box2_ui.paste_button.is_enabled)
         self.cursor_manager.update(mouse_pos)
 
         pygame.display.flip()

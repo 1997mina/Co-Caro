@@ -1,5 +1,4 @@
 import pygame
-from manager.CursorManager import CursorManager
 
 class Button:
     """
@@ -13,7 +12,7 @@ class Button:
                  disabled_color=(180, 180, 180), # Màu khi nút bị vô hiệu hóa
                  border_radius=-1, # Bán kính bo góc, -1 là hình elip (mặc định)
                  shadow_color=(0, 0, 0, 50),
-                 shadow_offset=(3, 3)):
+                 shadow_offset=(4, 4)):
 
         self.rect = pygame.Rect(x, y, width, height)
         self.icon_img = icon_img
@@ -37,9 +36,6 @@ class Button:
         self.is_pressed = False
         self.is_selected = False
         self.is_enabled = True
-
-        # Cursor
-        self.cursor_manager = CursorManager()
 
     def handle_event(self, event):
         """
@@ -69,11 +65,6 @@ class Button:
         """
         Vẽ nút lên màn hình, bao gồm bóng đổ và các trạng thái khác nhau.
         """
-        # Cập nhật con trỏ
-        self.cursor_manager.reset()
-        self.cursor_manager.add_clickable_area(self.rect, self.is_enabled)
-        self.cursor_manager.update(pygame.mouse.get_pos())
-
         # Xác định màu sắc dựa trên trạng thái
         if not self.is_enabled:
             current_color = self.colors['disabled']

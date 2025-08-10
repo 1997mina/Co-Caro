@@ -3,6 +3,7 @@ import pygame
 from utils.ResourcePath import resource_path
 from manager.SoundManager import SoundManager
 from ui.components.Button import Button
+from logic.ScoreIndicator import ScoreIndicator
 
 class InfoPanel:
     """
@@ -20,13 +21,14 @@ class InfoPanel:
         self.o_img = pygame.transform.smoothscale(o_img, (icon_size, icon_size))
         
         # Tải và thay đổi kích thước ảnh đại diện người chơi mặc định
-        player_icon_size = 100
+        player_icon_size = 90
         self.player_icon_img = pygame.image.load(resource_path('img/ingame/Player.png')).convert_alpha()
         self.player_icon_img = pygame.transform.smoothscale(self.player_icon_img, (player_icon_size, player_icon_size))
         
         # Fonts
         self.font_name = pygame.font.SysFont("Times New Roman", 32, bold=True)
         self.font_total_time_label = pygame.font.SysFont("Times New Roman", 24)
+        self.font_score_title = pygame.font.SysFont("Times New Roman", 22, bold=True)
         self.font_turn = pygame.font.SysFont("Times New Roman", 24, italic=True)
         self.font_timer = pygame.font.SysFont("Arial", 42, bold=True)
         self.font_button = pygame.font.SysFont("Times New Roman", 24, bold=True)
@@ -34,11 +36,18 @@ class InfoPanel:
         # Colors
         self.bg_color = (240, 240, 240)
         self.text_color = (30, 30, 30)
-        self.highlight_color = (112, 204, 225) # Màu xanh nước biển nhạt
         self.divider_color = (200, 200, 200)
         self.timer_color = (60, 60, 60)
         self.timer_warning_color = (211, 47, 47) # Màu đỏ cảnh báo
         self.timer_inactive_color = (150, 150, 150) # Màu xám cho đồng hồ không hoạt động
+        self.score_box_fill_color = (255, 193, 7) # Màu vàng
+        self.score_box_empty_color = (200, 200, 200)
+        self.score_box_border_color = (120, 120, 120)
+        
+        # Khởi tạo ScoreIndicator
+        score_indicator_rect = pygame.Rect(self.rect.x, self.rect.bottom - 250, self.rect.width, 150)
+        score_indicator_colors = {'text': self.text_color, 'fill': self.score_box_fill_color, 'border': self.score_box_border_color}
+        self.score_indicator = ScoreIndicator(score_indicator_rect, self.font_score_title, self.font_timer, score_indicator_colors, x_img, o_img)
 
         # Tải hình ảnh cho các nút
         self.pause_img = pygame.image.load(resource_path('img/ingame/Pause.png')).convert_alpha()
@@ -106,13 +115,10 @@ class InfoPanel:
             current_x += button_width + button_spacing
 
     def _draw_player_avatar(self, screen, player_name, player_area, y_cursor):
-        """Vẽ ảnh đại diện mặc định cho người chơi. Lớp con có thể ghi đè."""
-        if player_name == "Máy tính":
-            player_icon_rect = self.ai_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
-        else:
-            player_icon_rect = self.player_icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
-
-        screen.blit(self._get_player_icon(player_name), player_icon_rect)
+        """Vẽ ảnh đại diện cho người chơi, sử dụng phương thức _get_player_icon để hỗ trợ đa hình."""
+        player_icon = self._get_player_icon(player_name)
+        player_icon_rect = player_icon.get_rect(centerx=player_area.centerx, top=y_cursor)
+        screen.blit(player_icon, player_icon_rect)
         return player_icon_rect.bottom
 
     def _get_player_icon(self, player_name):
@@ -120,7 +126,7 @@ class InfoPanel:
         # Mặc định là ảnh người chơi, lớp con có thể ghi đè để thêm ảnh AI
         return self.player_icon_img
 
-    def _draw_player_info(self, screen, player_char, player_name, player_time, is_current_player, time_mode, player_area):
+    def _draw_player_info(self, screen, player_char, player_name, player_score, player_time, is_current_player, time_mode, player_area):
         """Vẽ thông tin cho một người chơi cụ thể trong khu vực được chỉ định."""
         if is_current_player:
             pygame.draw.rect(screen, self.highlight_color, player_area, border_radius=10)
@@ -138,8 +144,16 @@ class InfoPanel:
 
         # 3. Biểu tượng X/O
         icon_img = self.x_img if player_char == 'X' else self.o_img
-        icon_rect = icon_img.get_rect(centerx=player_area.centerx, top=y_cursor)
-        screen.blit(icon_img, icon_rect)
+
+        # 3.1. Biểu tượng X/O làm watermark (mờ)
+        watermark_icon_img = icon_img.copy()
+        watermark_icon_img.set_alpha(40) # Đặt độ trong suốt
+        watermark_icon_img = pygame.transform.smoothscale(watermark_icon_img, 
+                                                          (int(watermark_icon_img.get_width() * 3), 
+                                                           int(watermark_icon_img.get_height() * 3))) # Tăng kích thước
+        watermark_rect = watermark_icon_img.get_rect(center=player_area.center)
+        screen.blit(watermark_icon_img, watermark_rect)
+
 
         y_cursor_bottom = player_area.bottom - 5
 
@@ -179,25 +193,33 @@ class InfoPanel:
             turn_rect = turn_surf.get_rect(centerx=player_area.centerx, bottom=y_cursor_bottom)
             screen.blit(turn_surf, turn_rect)
 
-    def draw(self, screen, current_player, remaining_times, time_mode, paused):
+    def draw(self, screen, current_player, remaining_times, time_mode, paused, winning_cells=None, last_move=None, match_history=None):
+        """
+        Vẽ toàn bộ bảng thông tin.
+        """
         pygame.draw.rect(screen, self.bg_color, self.rect)
         
-        area_width = self.rect.width - 20
-        area_height = 300 
+        area_width = self.rect.width - 20 # Chiều rộng vùng vẽ thông tin người chơi
+        area_height = 250 # Chiều cao vùng vẽ thông tin người chơi
         margin_from_center = 10
-        divider_y = self.rect.centery - 60
+        # Vị trí đường phân cách giữa 2 người chơi
+        divider_y = self.rect.y + area_height + margin_from_center + 10 
         
         # --- Khu vực người chơi 1 ---
         p1_y = divider_y - margin_from_center - area_height
         p1_area = pygame.Rect(self.rect.x + 10, p1_y, area_width, area_height)
-        self._draw_player_info(screen, 'X', self.player_names['X'], remaining_times['X'], current_player == 'X', time_mode, p1_area)
+        self._draw_player_info(screen, 'X', self.player_names['X'], 0, remaining_times['X'], current_player == 'X', time_mode, p1_area)
 
-        # --- Vẽ đường phân cách ---
+        # --- Vẽ đường phân cách giữa thông tin 2 người chơi ---
         pygame.draw.line(screen, self.divider_color, (self.rect.x + 20, divider_y), (self.rect.right - 20, divider_y), 2)
 
         # --- Khu vực người chơi 2 ---
         p2_y = divider_y + margin_from_center
-        p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height)
-        self._draw_player_info(screen, 'O', self.player_names['O'], remaining_times['O'], current_player == 'O', time_mode, p2_area)
+        p2_area = pygame.Rect(self.rect.x + 10, p2_y, area_width, area_height) # Vị trí và kích thước vùng vẽ thông tin người chơi O
+        self._draw_player_info(screen, 'O', self.player_names['O'], 0, remaining_times['O'], current_player == 'O', time_mode, p2_area)
+
+        # Vẽ ScoreIndicator nếu có lịch sử đấu
+        if match_history is not None:
+            self.score_indicator.draw(screen, match_history)
 
         self._draw_buttons(screen, current_player, paused)

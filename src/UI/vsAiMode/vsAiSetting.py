@@ -34,7 +34,6 @@ class VsAiSetting(SettingUI):
             self.screen_width / 2 - input_box_width / 2, 80, input_box_width, 50,
             self.font_label, TEXT_COLOR, DARK_GRAY, DARK_WHITE
         )
-        self.player_name_input_box._create_paste_button(self.sound_manager) # Khởi tạo nút Dán
 
         # --- Trạng thái và các thành phần UI ---
         self.player_piece = None  # 'X' hoặc 'O'

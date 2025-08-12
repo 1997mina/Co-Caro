@@ -1,9 +1,9 @@
 import pygame
 import sys
 
-from ui.twoplayermode.TwoPlayerGameSession import start_two_players_session
+from ui.vsAiMode.aiGameSession import AIGameSession
 from ui.MainMenu import show_main_menu
-from ui.vsAiMode.aiGameSession import start_ai_game_session
+from ui.twoplayermode.TwoPlayerGameSession import TwoPlayerGameSession
 
 if __name__ == '__main__':
     """
@@ -23,9 +23,13 @@ if __name__ == '__main__':
         choice = show_main_menu(screen)
 
         if choice == '2_players':
-            start_two_players_session(screen)
+            # Khởi tạo và chạy session cho 2 người chơi
+            session = TwoPlayerGameSession(screen)
+            session.run()
         elif choice == 'vs_ai':
-            start_ai_game_session(screen)
+            # Khởi tạo và chạy session cho chế độ vs AI
+            session = AIGameSession(screen)
+            session.run()
         elif choice == 'quit':
             break # Thoát khỏi vòng lặp chính của ứng dụng
 

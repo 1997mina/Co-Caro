@@ -31,17 +31,6 @@ class InputBox:
         self.last_cursor_toggle = pygame.time.get_ticks()
         self.cursor_blink_interval = 500  # milliseconds
 
-        # Nút "Dán"
-        self.paste_button = None
-        self.paste_button_visible = False
-        self.paste_button_rect = pygame.Rect(self.rect.right + 5, self.rect.centery - 15, 60, 30)
-        self.paste_font = pygame.font.SysFont("Arial", 18)
-        self.paste_button_color = (100, 100, 255)
-        self.paste_button_hover_color = (130, 130, 255)
-        self.paste_button_pressed_color = (80, 80, 235)
-        self.paste_button_text_color = (255, 255, 255)
-
-        # Khởi tạo module clipboard của Pygame nếu chưa có
         if not pygame.scrap.get_init():
             pygame.scrap.init()
 
@@ -51,7 +40,7 @@ class InputBox:
                                    self.paste_font.render("Dán", True, self.paste_button_text_color), sound_manager,
                                    color=self.paste_button_color, hover_color=self.paste_button_hover_color, pressed_color=self.paste_button_pressed_color,
                                    border_radius=5)
-        self.paste_button.is_enabled = False # Mặc định vô hiệu hóa
+        self.paste_button.is_enabled = False # Mặc định vô hiệu hóa (nút Dán)
 
     def handle_event(self, event):
         """
@@ -63,13 +52,8 @@ class InputBox:
                 if not self.active:
                     self.last_cursor_toggle = pygame.time.get_ticks()
                 self.update() # Cập nhật ngay lập tức để con trỏ hiển thị
-                self.active = True
-                # Kích hoạt nút Dán khi ô được kích hoạt
-                self.paste_button.is_enabled = True
-            elif self.paste_button and self.paste_button.handle_event(event):
-                self._paste_from_clipboard()
-                # Giữ ô nhập liệu active sau khi dán
-                self.cursor_visible = True # Đảm bảo con trỏ hiển thị sau khi dán
+                self.active = True # Kích hoạt ô nhập liệu
+                # Tùy chọn: Kích hoạt nút Dán khi ô được kích hoạt
                 self.cursor_visible = True
                 self.active = True
             else:
@@ -89,11 +73,6 @@ class InputBox:
                     self._paste_from_clipboard()
                 else:
                     self.text += event.unicode
-        
-        # Xử lý sự kiện cho nút Dán
-        if self.paste_button:
-            # Nút Dán sẽ tự xử lý trạng thái enabled/disabled của nó
-            self.paste_button.handle_event(event)
 
     def _paste_from_clipboard(self):
         try:
@@ -113,9 +92,6 @@ class InputBox:
         if current_time - self.last_cursor_toggle > self.cursor_blink_interval:
             self.cursor_visible = not self.cursor_visible
             self.last_cursor_toggle = current_time
-        
-        if not self.active:
-            self.paste_button.is_enabled = False
 
     def handle_mouse_cursor(self, mouse_pos):
         """
@@ -124,10 +100,6 @@ class InputBox:
         """
         if self.rect.collidepoint(mouse_pos):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
-            return True
-        # Nếu nút Dán đang hoạt động và chuột đang hover qua nó
-        if self.paste_button and self.paste_button.is_enabled and self.paste_button.rect.collidepoint(mouse_pos):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             return True
         return False
 
@@ -151,10 +123,6 @@ class InputBox:
             cursor_y_start = self.rect.y + 8
             cursor_y_end = self.rect.y + self.rect.height - 8
             pygame.draw.line(screen, self.text_color, (cursor_x, cursor_y_start), (cursor_x, cursor_y_end), 2)
-
-        # Vẽ nút Dán
-        if self.paste_button:
-            self.paste_button.draw(screen)
 
     def get_text(self):
         """Trả về văn bản hiện tại trong ô."""

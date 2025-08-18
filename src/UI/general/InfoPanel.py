@@ -2,7 +2,7 @@ import pygame
 
 from utils.ResourcePath import resource_path
 from manager.SoundManager import SoundManager
-from ui.components.Button import Button
+from components.Button import Button
 from logic.ScoreIndicator import ScoreIndicator
 
 class InfoPanel:

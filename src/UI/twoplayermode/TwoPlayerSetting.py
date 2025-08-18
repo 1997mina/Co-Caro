@@ -1,9 +1,9 @@
 import pygame
 
 from manager.CursorManager import CursorManager
-from ui.components.Button import Button
-from ui.components.InputBox import InputBox
-from ui.general.SettingUI import SettingUI
+from components.Button import Button
+from components.InputBox import InputBox
+from ui.general.ModeSetting import SettingUI
 from utils.ResourcePath import resource_path
 
 # Hằng số cho màu sắc và font chữ

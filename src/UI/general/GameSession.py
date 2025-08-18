@@ -2,6 +2,7 @@ import pygame
 
 from logic.BoardLogic import BoardLogic
 from manager.GameStateManager import GameStateManager
+from manager.SettingsManager import SettingsManager
 from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
@@ -36,30 +37,45 @@ class GameSession:
         self.winning_cells = []
         self.last_move = None
 
-    def _initialize_components(self, player_names, time_mode, time_limit, first_turn_char, info_panel_class):
+    def _initialize_components(self, player_names, time_mode, time_limit, first_turn_char, info_panel_class, board_size=None):
         """
         Khởi tạo các thành phần cốt lõi của game sau khi có cài đặt.
         """
         self.player_names = player_names
         self.time_mode = time_mode
         self.time_limit = time_limit
+        # Nếu không có board_size được truyền, lấy từ cài đặt đã lưu
+        self.board_size = board_size if board_size is not None else SettingsManager().get('board_size')
         self.current_player = first_turn_char
         self.initial_player = first_turn_char
         self.match_history = []
 
         # --- Cấu hình bàn cờ và panel ---
-        self.cell_size = 40
-        board_height_cells = self.screen_height // self.cell_size
-        board_width_cells = (self.screen_width - 250) // self.cell_size
-        panel_actual_width = self.screen_width - (board_width_cells * self.cell_size)
-        board_pixel_width = board_width_cells * self.cell_size
-        self.board_rect = pygame.Rect(panel_actual_width, 0, board_pixel_width, self.screen_height)
+        # Tính toán kích thước ô (cell_size) một cách linh hoạt
+        # để bàn cờ NxN vừa với màn hình.
+        panel_width = 270 # Chiều rộng cố định cho panel thông tin
+        available_width_for_board = self.screen_width - panel_width
+        available_height_for_board = self.screen_height
+
+        # cell_size được quyết định bởi chiều nào hẹp hơn để đảm bảo ô vuông
+        self.cell_size = min(available_width_for_board // self.board_size, available_height_for_board // self.board_size)
+
+        # Tính toán kích thước thực tế của bàn cờ (pixel)
+        board_pixel_dim = self.board_size * self.cell_size
+
+        # Tính toán vị trí để căn giữa bàn cờ trong không gian còn lại
+        board_start_x = panel_width + (available_width_for_board - board_pixel_dim) // 2
+        board_start_y = (available_height_for_board - board_pixel_dim) // 2
+
+        # board_rect bây giờ đại diện cho vị trí và kích thước chính xác của bàn cờ
+        self.board_rect = pygame.Rect(board_start_x, board_start_y, board_pixel_dim, board_pixel_dim)
 
         # --- Khởi tạo các đối tượng quản lý và logic ---
-        self.board = GameBoard(board_width_cells, board_height_cells, self.cell_size, self.screen_width, self.screen_height, self.player_names, info_panel_class)
+        # Truyền screen_height để InfoPanel có thể tính toán chiều cao của nó
+        self.board = GameBoard(self.board_rect, self.board_size, self.cell_size, self.screen_height, self.player_names, info_panel_class, panel_width)
         
         WIN_LENGTH = 5
-        self.game_logic = BoardLogic(board_width_cells, board_height_cells, WIN_LENGTH)
+        self.game_logic = BoardLogic(self.board_size, self.board_size, WIN_LENGTH)
         
         self.sound_manager = SoundManager()
         self.cursor_manager = CursorManager()
@@ -72,6 +88,12 @@ class GameSession:
         self.winner = None
         self.winning_cells = []
         self.last_move = None
+
+    def _start_new_round_music(self):
+        """Phát hoặc phát lại nhạc nền cho ván chơi."""
+        # Phát lại nhạc từ đầu khi bắt đầu một phiên chơi mới hoặc ván mới
+        if self.sound_manager:
+            self.sound_manager.play_music('game', force_replay=True)
 
     def _initialize_timer(self):
         """Khởi tạo hoặc reset timer. Lớp con có thể ghi đè."""
@@ -180,6 +202,7 @@ class GameSession:
         self.last_move = None
         self.winning_cells = []
         self._initialize_timer()
+        self._start_new_round_music()
 
     def _post_move_processing(self, row, col):
         """
@@ -213,6 +236,7 @@ class GameSession:
         if not self._setup_session():
             return
 
+        self._start_new_round_music()
         while self.running:
             self._check_time_up()
             self._handle_events()
@@ -221,4 +245,3 @@ class GameSession:
             self._handle_game_over()
 
             pygame.display.flip()
-

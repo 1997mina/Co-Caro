@@ -54,9 +54,11 @@ class TwoPlayerGameSession(GameSession):
         # Xử lý click chuột để đi cờ
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouseX, mouseY = event.pos
-            if self.board_rect.collidepoint(mouseX, mouseY):
-                clicked_row = mouseY // self.cell_size
-                clicked_col = (mouseX - self.board_rect.left) // self.cell_size
-                if self.board.mark_square(clicked_row, clicked_col, self.current_player):
-                    # Gọi phương thức xử lý chung sau khi có nước đi hợp lệ
-                    self._post_move_processing(clicked_row, clicked_col)
+            if self.board.rect.collidepoint(mouseX, mouseY): # Sử dụng self.board.rect thay vì self.board_rect
+                cell = self.board.get_cell_from_pos((mouseX, mouseY))
+                if cell:
+                    clicked_row, clicked_col = cell
+
+                    if self.board.mark_square(clicked_row, clicked_col, self.current_player):
+                        # Gọi phương thức xử lý chung sau khi có nước đi hợp lệ
+                        self._post_move_processing(clicked_row, clicked_col)

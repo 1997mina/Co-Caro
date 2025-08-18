@@ -113,11 +113,13 @@ class AIGameSession(GameSession):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouseX, mouseY = event.pos
                 if self.board_rect.collidepoint(mouseX, mouseY):
-                    clicked_row = mouseY // self.cell_size
-                    clicked_col = (mouseX - self.board_rect.left) // self.cell_size
-                    if self.board.mark_square(clicked_row, clicked_col, self.current_player):
-                        self.hint_cell = None  # Xóa gợi ý sau khi người chơi đi
-                        self._post_move_processing(clicked_row, clicked_col)
+                    cell = self.board.get_cell_from_pos((mouseX, mouseY))
+                    if cell:
+                        clicked_row, clicked_col = cell
+
+                        if self.board.mark_square(clicked_row, clicked_col, self.current_player):
+                            self.hint_cell = None  # Xóa gợi ý sau khi người chơi đi
+                            self._post_move_processing(clicked_row, clicked_col)
 
     def _update_cursor(self):
         """Ghi đè để xử lý con trỏ khi AI đang suy nghĩ."""

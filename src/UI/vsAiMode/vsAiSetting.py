@@ -2,10 +2,10 @@ import pygame
 import sys
 
 from utils.ResourcePath import resource_path
-from ui.general.SettingUI import SettingUI
-from ui.components.Button import Button
+from ui.general.ModeSetting import SettingUI
+from components.Button import Button
 from manager.CursorManager import CursorManager
-from ui.components.InputBox import InputBox
+from components.InputBox import InputBox
 
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
 WHITE = (255, 255, 255)

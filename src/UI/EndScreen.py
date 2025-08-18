@@ -1,7 +1,7 @@
 import pygame
 
 from manager.SoundManager import SoundManager
-from ui.components.Button import Button
+from components.Button import Button
 from manager.CursorManager import CursorManager
 
 # Hằng số cho màu sắc và font chữ

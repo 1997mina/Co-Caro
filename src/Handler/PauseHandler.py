@@ -14,13 +14,7 @@ class PauseHandler:
         self.screen = screen
         self.board_rect = board_rect
         self.paused = False
-
-        # Tạo các thành phần đồ họa cho màn hình tạm dừng, chỉ tạo một lần
-        self.overlay = pygame.Surface(self.board_rect.size, pygame.SRCALPHA)
-        self.overlay.fill((0, 0, 0, 128))  # Màu đen, bán trong suốt
-        self.font = pygame.font.SysFont("Times New Roman", 80, bold=True)
-        self.text = self.font.render("Đã tạm dừng", True, (255, 255, 255))
-        self.text_rect = self.text.get_rect(center=self.board_rect.center)
+        # Các thành phần đồ họa đã được loại bỏ vì màn hình tạm dừng không còn hiển thị.
 
     def is_paused(self):
         """Trả về trạng thái tạm dừng hiện tại."""
@@ -35,10 +29,8 @@ class PauseHandler:
             timer.resume()
 
     def draw(self):
-        """Vẽ lớp phủ và chữ nếu game đang ở trạng thái tạm dừng."""
-        if self.paused:
-            self.screen.blit(self.overlay, self.board_rect.topleft)
-            self.screen.blit(self.text, self.text_rect)
+        """Vẽ lớp phủ khi game tạm dừng. Chức năng này đã bị vô hiệu hóa."""
+        pass
 
     def reset(self):
         """Thiết lập lại trạng thái tạm dừng cho ván mới."""

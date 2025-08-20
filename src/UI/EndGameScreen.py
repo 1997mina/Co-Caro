@@ -69,14 +69,14 @@ def show_end_screen(screen, winner_name, board_rect, match_history, x_img, o_img
     play_again_button = Button(
         board_rect.centerx - button_width / 2, board_rect.centery + 70 - button_height / 2,
         button_width, button_height,
-        font_button.render("Ván tiếp theo", True, BUTTON_TEXT_COLOR), sound_manager,
+        font_button.render("Tiếp Tục", True, BUTTON_TEXT_COLOR), sound_manager,
         color=PLAY_AGAIN_COLOR, hover_color=PLAY_AGAIN_HOVER_COLOR, pressed_color=PLAY_AGAIN_PRESSED_COLOR, 
         border_radius=10
     )
     quit_button = Button(
         board_rect.centerx - button_width / 2, board_rect.centery + 140 - button_height / 2,
         button_width, button_height,
-        font_button.render("Về Menu", True, BUTTON_TEXT_COLOR), sound_manager,
+        font_button.render("Thoát Game", True, BUTTON_TEXT_COLOR), sound_manager,
         color=QUIT_COLOR, hover_color=QUIT_HOVER_COLOR, pressed_color=QUIT_PRESSED_COLOR,
         border_radius=10
     )
@@ -207,7 +207,7 @@ def show_quit_confirmation_dialog(screen, board_rect):
     stay_button = Button(
         board_rect.centerx - button_width / 2, board_rect.centery + 80 - button_height / 2,
         button_width, button_height,
-        font_button.render("Ở lại", True, BUTTON_TEXT_COLOR), sound_manager,
+        font_button.render("Tiếp tục", True, BUTTON_TEXT_COLOR), sound_manager,
         color=(100, 100, 100), hover_color=(130, 130, 130), pressed_color=(80, 80, 80),
         border_radius=10
     )

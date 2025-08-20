@@ -3,7 +3,7 @@ import threading
 
 from logic.aiLogic import AIPlayer
 from manager.TimerManager import TimerManager
-from ui.EndScreen import show_quit_confirmation_dialog
+from ui.EndGameScreen import show_quit_confirmation_dialog
 from ui.general.GameSession import GameSession
 from ui.vsAiMode.vsAiSetting import get_ai_game_settings
 from ui.vsAiMode.vsAiInfoPanel import vsAiInfoPanel
@@ -80,11 +80,6 @@ class AIGameSession(GameSession):
 
     def _handle_player_turn(self, event):
         """Xử lý lượt đi cho cả người chơi và AI."""
-        # Xử lý click nút Thoát trên InfoPanel (chức năng tương tự phím ESC)
-        if self.board.player_info_panel.quit_button.handle_event(event):
-            if show_quit_confirmation_dialog(self.screen, self.board_rect):
-                self.running = False
-            return
         # --- Lượt đi của AI ---
         if self.game_state.is_playing() and self.current_player == self.ai_player_char and not self.ai_is_thinking:
             self.ai_is_thinking = True
@@ -156,25 +151,31 @@ class AIGameSession(GameSession):
             pass
 
     def _handle_events(self):
-        """Ghi đè để ngăn chặn một số hành động khi AI đang suy nghĩ."""
+        """Ghi đè để xử lý sự kiện, cho phép thoát game ngay cả khi AI đang suy nghĩ."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
                 pygame.quit()
                 exit()
 
-            # Ngăn các sự kiện khác nếu AI đang suy nghĩ
+            # Cho phép thoát bằng phím ESC hoặc nút Thoát bất cứ lúc nào, ngay cả khi AI đang suy nghĩ.
+            # Việc này được ưu tiên xử lý trước.
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self._handle_quit_intent()
+                continue
+
+            if self.board.player_info_panel.quit_button.handle_event(event):
+                self._handle_quit_intent()
+                continue
+            
+            # Cho phép mở Cài đặt bất cứ lúc nào
+            if self.board.player_info_panel.settings_button.handle_event(event):
+                self._handle_settings_intent()
+                continue
+
+            # Nếu AI đang suy nghĩ, bỏ qua các sự kiện game khác (như click chuột, nút pause,...)
             if self.ai_is_thinking:
                 continue
-
-            if self.game_state.handle_event(event, self.timer, self.board):
-                continue
-
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if not self.game_state.game_over:
-                    if show_quit_confirmation_dialog(self.screen, self.board_rect):
-                        self.running = False
-                    continue
 
             self._handle_player_turn(event)
 
@@ -184,6 +185,8 @@ class AIGameSession(GameSession):
         """
         if not self._setup_session():
             return
+
+        self._start_new_round_music()
 
         while self.running:
             self._check_ai_move() # Kiểm tra kết quả từ luồng AI

@@ -50,8 +50,6 @@ class InfoPanel:
         self.score_indicator = ScoreIndicator(score_indicator_rect, self.font_score_title, self.font_timer, score_indicator_colors, x_img, o_img)
 
         # Tải hình ảnh cho các nút
-        self.pause_img = pygame.image.load(resource_path('img/ingame/Pause.png')).convert_alpha()
-        self.play_img = pygame.image.load(resource_path('img/ingame/Play.png')).convert_alpha()
         self.quit_img = pygame.image.load(resource_path('img/general/Quit.png')).convert_alpha()
         self.hint_img = pygame.image.load(resource_path('img/ingame/Hint.png')).convert_alpha()
 
@@ -69,11 +67,11 @@ class InfoPanel:
                                   pygame.transform.smoothscale(self.hint_img, self.icon_size_in_button), sound_manager,
                                   color=(100, 200, 255), hover_color=(130, 220, 255), pressed_color=(80, 180, 235))
 
-        # Nút Tạm dừng
-        self.pause_button = Button(0, buttons_y - button_size/2, button_size, button_size,
-                                   pygame.transform.smoothscale(self.pause_img, self.icon_size_in_button), sound_manager,
-                                   color=(255, 220, 0), hover_color=(255, 230, 50), pressed_color=(235, 200, 0))
-
+        # Nút Cài đặt (Settings)
+        self.settings_img = pygame.image.load(resource_path('img/ingame/Setting.png')).convert_alpha()
+        self.settings_button = Button(0, buttons_y - button_size/2, button_size, button_size,
+                                      pygame.transform.smoothscale(self.settings_img, self.icon_size_in_button), sound_manager,
+                                      color=(255, 200, 0), hover_color=(255, 220, 50), pressed_color=(235, 180, 0))
         # Nút Thoát
         self.quit_button = Button(0, buttons_y - button_size/2, button_size, button_size,
                                   pygame.transform.smoothscale(self.quit_img, self.icon_size_in_button), sound_manager,
@@ -84,14 +82,9 @@ class InfoPanel:
 
     def _draw_buttons(self, screen, current_player, paused):
         """
-        Vẽ các nút điều khiển (Tạm dừng/Tiếp tục, Thoát, Gợi ý).
+        Vẽ các nút điều khiển (Thoát, Gợi ý).
         Các nút sẽ được tự động căn giữa và phân bố đều.
         """
-        # Cập nhật icon cho nút Tạm dừng/Tiếp tục
-        if paused:
-            self.pause_button.icon_img = pygame.transform.smoothscale(self.play_img, self.icon_size_in_button)
-        else:
-            self.pause_button.icon_img = pygame.transform.smoothscale(self.pause_img, self.icon_size_in_button)
 
         # --- Logic phân bố nút tự động ---
         num_buttons = len(self.buttons_to_layout)
@@ -141,6 +134,7 @@ class InfoPanel:
         name_rect = name_surf.get_rect(centerx=player_area.centerx, top=y_cursor)
         screen.blit(name_surf, name_rect)
         y_cursor = name_rect.bottom + 15
+
 
         # 3. Biểu tượng X/O
         icon_img = self.x_img if player_char == 'X' else self.o_img

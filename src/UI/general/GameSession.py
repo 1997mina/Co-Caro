@@ -6,8 +6,9 @@ from manager.SettingsManager import SettingsManager
 from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
-from ui.EndScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
+from ui.EndGameScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
 from ui.GameBoard import GameBoard
+from ui.GameSettings import show_ingame_settings_dialog
 
 class GameSession:
     """
@@ -100,6 +101,53 @@ class GameSession:
         self.timer = TimerManager(self.time_limit, self.time_mode)
         self.timer.switch_turn(self.current_player)
 
+    def _handle_quit_intent(self):
+        """
+        Tạm dừng game và hiển thị hộp thoại xác nhận thoát.
+        Hàm này sẽ xử lý việc tạm dừng và tiếp tục game một cách an toàn.
+        """
+        if self.game_state.game_over:
+            return
+
+        # Tạm dừng nhạc và game state trước khi hiển thị hộp thoại
+        self.sound_manager.pause_music()
+        was_paused_by_user = self.game_state.is_paused()
+        # Tạm dừng game nếu nó chưa được tạm dừng
+        if not was_paused_by_user:
+            self.game_state.toggle_pause(self.timer)
+
+        user_wants_to_quit = show_quit_confirmation_dialog(self.screen, self.board_rect)
+
+        # Xử lý kết quả từ hộp thoại
+        if user_wants_to_quit:
+            self.running = False
+        else:
+            # Nếu người dùng không thoát, tiếp tục lại game và nhạc
+            if not was_paused_by_user:
+                self.game_state.toggle_pause(self.timer)
+            self.sound_manager.unpause_music()
+
+    def _handle_settings_intent(self):
+        """
+        Tạm dừng game và hiển thị hộp thoại cài đặt trong game.
+        """
+        if self.game_state.game_over:
+            return
+
+        # Tạm dừng nhạc và game state trước khi hiển thị hộp thoại
+        self.sound_manager.pause_music()
+        was_paused_by_user = self.game_state.is_paused()
+        if not was_paused_by_user:
+            self.game_state.toggle_pause(self.timer)
+
+        # Hiển thị hộp thoại cài đặt
+        show_ingame_settings_dialog(self.screen, self.board_rect)
+
+        # Sau khi hộp thoại đóng, tiếp tục lại game và nhạc
+        if not was_paused_by_user:
+            self.game_state.toggle_pause(self.timer)
+        self.sound_manager.unpause_music()
+
     def _setup_session(self):
         """
         Lớp con BẮT BUỘC phải ghi đè phương thức này.
@@ -138,10 +186,18 @@ class GameSession:
                 continue
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if not self.game_state.game_over:
-                    if show_quit_confirmation_dialog(self.screen, self.board_rect):
-                        self.running = False
-                    continue
+                self._handle_quit_intent()
+                continue
+
+            # Xử lý click nút Thoát trên InfoPanel
+            if self.board.player_info_panel.quit_button.handle_event(event):
+                self._handle_quit_intent()
+                continue
+            
+            # Xử lý click nút Cài đặt trên InfoPanel
+            if self.board.player_info_panel.settings_button.handle_event(event):
+                self._handle_settings_intent()
+                continue
 
             # Gọi phương thức xử lý lượt đi của lớp con
             self._handle_player_turn(event)

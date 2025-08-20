@@ -39,6 +39,96 @@ def _load_and_scale_background(screen_width, screen_height):
     background_img.set_alpha(50)
     return background_img
 
+def show_ingame_settings_dialog(screen, board_rect):
+    """
+    Hiển thị hộp thoại cài đặt nhanh trong game (chỉ âm lượng).
+    Hộp thoại này sẽ vẽ đè lên màn hình game hiện tại.
+    """
+    sound_manager = SoundManager()
+    settings_manager = SettingsManager()
+    cursor_manager = CursorManager()
+
+    # --- Tạo một lớp phủ bán trong suốt chỉ cho khu vực bàn cờ ---
+    background = screen.copy()
+    overlay = pygame.Surface(board_rect.size, pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 150))
+
+    # --- Hộp thoại ---
+    dialog_width = 650
+    dialog_height = 350
+    dialog_rect = pygame.Rect(0, 0, dialog_width, dialog_height)
+    dialog_rect.center = board_rect.center
+    dialog_bg_color = (230, 230, 230)
+    dialog_border_color = (100, 100, 100)
+
+    # --- Tiêu đề ---
+    font_title = pygame.font.SysFont("Times New Roman", 48, bold=True)
+    title_surf = font_title.render("Cài đặt Âm thanh", True, TITLE_COLOR)
+    title_rect = title_surf.get_rect(centerx=dialog_rect.centerx, top=dialog_rect.top + 15)
+
+    # --- Thanh trượt ---
+    slider_width = 450
+    slider_height = 20
+    original_music_volume = settings_manager.get('music_volume')
+    original_sfx_volume = settings_manager.get('sfx_volume')
+
+    music_volume_slider = Slider(0, 0, slider_width, slider_height,
+                                 0, 100, int(original_music_volume * 100), sound_manager,
+                                 "Âm lượng nhạc nền: ", value_suffix="%")
+    music_volume_slider.set_center_component(dialog_rect.centerx, dialog_rect.centery - 30)
+
+    sfx_volume_slider = Slider(0, 0, slider_width, slider_height,
+                               0, 100, int(original_sfx_volume * 100), sound_manager,
+                               "Âm lượng hiệu ứng: ", value_suffix="%")
+    sfx_volume_slider.set_center_component(dialog_rect.centerx, dialog_rect.centery + 80)
+
+    # --- Nút Đóng ---
+    close_button_width = 180
+    close_button_height = 50
+    close_button = Button(dialog_rect.centerx - close_button_width / 2, dialog_rect.bottom - close_button_height - 20, 
+                          close_button_width, close_button_height,
+                          pygame.font.SysFont("Times New Roman", 32, bold=True).render("Đóng", True, WHITE), sound_manager,
+                          color=BACK_COLOR, hover_color=BACK_HOVER_COLOR, pressed_color=BACK_PRESSED_COLOR,
+                          border_radius=10)
+
+    running = True
+    while running:
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Cập nhật con trỏ chuột
+        cursor_manager.reset()
+        music_volume_slider.add_to_cursor_manager(cursor_manager)
+        sfx_volume_slider.add_to_cursor_manager(cursor_manager)
+        cursor_manager.add_clickable_area(close_button.rect, True)
+        cursor_manager.update(mouse_pos)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            
+            if music_volume_slider.handle_event(event):
+                new_volume = music_volume_slider.get_value() / 100.0
+                sound_manager.set_music_volume(new_volume)
+            
+            if sfx_volume_slider.handle_event(event):
+                new_volume = sfx_volume_slider.get_value() / 100.0
+                sound_manager.set_sfx_volume(new_volume)
+
+            if close_button.handle_event(event):
+                running = False
+
+        screen.blit(background, (0, 0))
+        screen.blit(overlay, board_rect.topleft)
+        pygame.draw.rect(screen, dialog_bg_color, dialog_rect, border_radius=15)
+        pygame.draw.rect(screen, dialog_border_color, dialog_rect, 3, border_radius=15)
+
+        screen.blit(title_surf, title_rect)
+        music_volume_slider.draw(screen)
+        sfx_volume_slider.draw(screen)
+        close_button.draw(screen)
+
+        pygame.display.flip()
+
 def show_settings_screen(screen):
     """
     Hiển thị màn hình cài đặt.
@@ -56,6 +146,7 @@ def show_settings_screen(screen):
     original_fullscreen = settings_manager.get('fullscreen')
     original_board_size = settings_manager.get('board_size')
     original_music_volume = settings_manager.get('music_volume')
+    original_sfx_volume = settings_manager.get('sfx_volume')
 
     # Tạo các biến tạm để lưu trạng thái cài đặt chưa được lưu
     # Điều này cho phép người dùng hủy thay đổi bằng cách nhấn "Quay lại"
@@ -87,7 +178,13 @@ def show_settings_screen(screen):
     music_volume_slider = Slider(0, 0, slider_width, slider_height,
                                  0, 100, int(original_music_volume * 100), sound_manager,
                                  "Âm lượng nhạc nền: ", value_suffix="%")
-    music_volume_slider.set_center_component(screen_width // 2, board_size_slider.track_rect.bottom + 100)
+    music_volume_slider.set_center_component(screen_width // 2, board_size_slider.track_rect.bottom + 70)
+
+    # Slider cho âm lượng hiệu ứng âm thanh
+    sfx_volume_slider = Slider(0, 0, slider_width, slider_height,
+                               0, 100, int(original_sfx_volume * 100), sound_manager,
+                               "Âm lượng hiệu ứng: ", value_suffix="%")
+    sfx_volume_slider.set_center_component(screen_width // 2, music_volume_slider.track_rect.bottom + 70)
 
 
     button_width = 200
@@ -148,7 +245,8 @@ def show_settings_screen(screen):
                 # Cập nhật lại kích thước màn hình sau khi thay đổi chế độ
                 screen_width, screen_height = screen.get_size()
 
-                # Tải lại và co dãn hình nền cho kích thước mới (nếu cần)
+                # Tải lại và co dãn hình nền cho kích thước mới
+                # (nếu cần, vì có thể người dùng đã thay đổi kích thước cửa sổ)
                 background_img = _load_and_scale_background(screen_width, screen_height)
 
                 # Cập nhật vị trí các phần tử UI để căn giữa lại
@@ -157,7 +255,8 @@ def show_settings_screen(screen):
                 # Cần tính toán lại vị trí của slider âm lượng dựa trên vị trí của slider kích thước bàn cờ
                 # và vị trí của slider kích thước bàn cờ dựa trên checkbox toàn màn hình.
                 # Điều này đảm bảo chúng luôn ở đúng vị trí tương đối.
-                board_size_slider.set_center_component(screen_width // 2, fullscreen_checkbox.rect.bottom + 100)
+                board_size_slider.set_center_component(screen_width // 2, fullscreen_checkbox.rect.bottom + 70)
+                sfx_volume_slider.set_center_component(screen_width // 2, music_volume_slider.track_rect.bottom + 70)
                 music_volume_slider.set_center_component(screen_width // 2, board_size_slider.rect.bottom + 50)
                 board_size_slider.set_center_component(screen_width // 2, fullscreen_checkbox.rect.bottom + 100)
                 
@@ -180,6 +279,12 @@ def show_settings_screen(screen):
                 new_volume = music_volume_slider.get_value() / 100.0
                 # Gọi phương thức mới của SoundManager để thay đổi âm lượng và lưu cài đặt
                 sound_manager.set_music_volume(new_volume)
+            
+            # Xử lý sự kiện cho slider âm lượng hiệu ứng
+            if sfx_volume_slider.handle_event(event):
+                new_volume = sfx_volume_slider.get_value() / 100.0
+                # Gọi phương thức của SoundManager để cập nhật âm lượng SFX ngay lập tức và lưu cài đặt
+                sound_manager.set_sfx_volume(new_volume)
 
             # Xử lý sự kiện cho nút Lưu
             if save_button.handle_event(event):
@@ -204,6 +309,7 @@ def show_settings_screen(screen):
         cursor_manager.add_clickable_area(save_button.rect, save_button.is_enabled)
         cursor_manager.add_clickable_area(back_button.rect, back_button.is_enabled)
         music_volume_slider.add_to_cursor_manager(cursor_manager)
+        sfx_volume_slider.add_to_cursor_manager(cursor_manager)
         board_size_slider.add_to_cursor_manager(cursor_manager) # Thêm slider vào cursor manager
         cursor_manager.update(pygame.mouse.get_pos())
 
@@ -219,19 +325,11 @@ def show_settings_screen(screen):
         title_rect = title_text.get_rect(center=(screen_width // 2, 60))
         screen.blit(title_text, title_rect)
 
-        # Vẽ checkbox
         fullscreen_checkbox.draw(screen)
-
-        # Vẽ slider
         board_size_slider.draw(screen)
-
-        # Vẽ slider âm lượng nhạc nền
         music_volume_slider.draw(screen)
-
-        # Vẽ nút Lưu
+        sfx_volume_slider.draw(screen)
         save_button.draw(screen)
-
-        # Vẽ nút quay lại
         back_button.draw(screen)
 
         # Hiển thị thông báo "Đã lưu!"

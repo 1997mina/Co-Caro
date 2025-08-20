@@ -10,7 +10,7 @@ class TwoPlayerInfoPanel(InfoPanel):
 
         # Xác định các nút sẽ được hiển thị trong chế độ này (không có nút Gợi ý)
         self.highlight_color = (112, 204, 225) # Màu xanh nước biển nhạt
-        self.buttons_to_layout = [self.pause_button, self.quit_button]
+        self.buttons_to_layout = [self.settings_button, self.quit_button]
 
         self.font_time_mode = pygame.font.SysFont("Times New Roman", 24, bold=True)
 

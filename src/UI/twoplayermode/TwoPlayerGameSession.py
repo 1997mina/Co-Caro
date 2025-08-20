@@ -1,7 +1,7 @@
 import pygame
 
 from ui.general.GameSession import GameSession
-from ui.EndScreen import show_quit_confirmation_dialog
+from ui.EndGameScreen import show_quit_confirmation_dialog
 from ui.twoplayermode.TwoPlayerSetting import get_two_player_setting
 from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
 
@@ -43,12 +43,6 @@ class TwoPlayerGameSession(GameSession):
         Xử lý lượt đi của người chơi.
         """
         if not self.game_state.is_playing():
-            return
-
-        # Xử lý click nút Thoát trên InfoPanel (chức năng tương tự phím ESC)
-        if self.board.player_info_panel.quit_button.handle_event(event):
-            if show_quit_confirmation_dialog(self.screen, self.board_rect):
-                self.running = False
             return
 
         # Xử lý click chuột để đi cờ

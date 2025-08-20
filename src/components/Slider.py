@@ -21,7 +21,7 @@ class Slider:
         self.sound_manager = sound_manager
         self.label_text = label_text
         self.value_suffix = value_suffix
-        self.text_padding = 20 # Khoảng cách từ lề slider đến text min/max
+        self.text_padding = 35 # Khoảng cách từ lề slider đến text min/max
 
         # Thuộc tính của núm trượt (knob)
         self.knob_radius = h + 4 # Bán kính của núm trượt
@@ -43,8 +43,8 @@ class Slider:
         self.min_max_font = pygame.font.SysFont("Times New Roman", 25) # Font nhỏ hơn cho min/max
 
         # Tạo surface cho văn bản min/max để tối ưu hóa
-        self.min_text_surf = self.min_max_font.render(str(self.min_val), True, self.text_color)
-        self.max_text_surf = self.min_max_font.render(str(self.max_val), True, self.text_color)
+        self.min_text_surf = self.min_max_font.render(str(self.min_val), True, self.text_color) # Render min text
+        self.max_text_surf = self.min_max_font.render(str(self.max_val), True, self.text_color) # Render max text
 
         # Tính toán vị trí cho văn bản min/max
         self.min_text_rect = self.min_text_surf.get_rect(midright=(self.track_rect.left - self.text_padding, self.track_rect.centery))
@@ -118,8 +118,8 @@ class Slider:
         screen.blit(text_surf, text_rect)
 
         # Vẽ giá trị min và max ở hai bên
-        screen.blit(self.min_text_surf, self.min_text_rect)
-        screen.blit(self.max_text_surf, self.max_text_rect)
+        screen.blit(self.min_text_surf, self.min_text_rect) # Draw min text
+        screen.blit(self.max_text_surf, self.max_text_rect) # Draw max text
 
 
     def get_value(self):
@@ -145,5 +145,5 @@ class Slider:
         self.knob_rect.center = (self._calculate_knob_pos_from_value(), self.track_rect.centery)
 
         # Cập nhật lại vị trí của nhãn min/max để chúng di chuyển cùng thanh trượt
-        self.min_text_rect.midright = (self.track_rect.left - self.text_padding, self.track_rect.centery)
-        self.max_text_rect.midleft = (self.track_rect.right + self.text_padding, self.track_rect.centery)
+        self.min_text_rect.midright = (self.track_rect.left - self.text_padding, self.track_rect.centery) # Update min text position
+        self.max_text_rect.midleft = (self.track_rect.right + self.text_padding, self.track_rect.centery) # Update max text position

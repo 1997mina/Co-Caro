@@ -12,7 +12,7 @@ class vsAiInfoPanel(InfoPanel):
         super().__init__(rect, player_names, x_img, o_img)
         self.highlight_color = (255, 213, 79) # Màu vàng nhạt
         self.font_difficulty = pygame.font.SysFont("Times New Roman", 26, bold=True)
-        self.buttons_to_layout = [self.hint_button, self.pause_button, self.quit_button]
+        self.buttons_to_layout = [self.hint_button, self.settings_button, self.quit_button]
 
         # Tải và thay đổi kích thước ảnh đại diện người chơi
         player_icon_size = 90

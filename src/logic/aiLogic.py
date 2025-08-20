@@ -55,15 +55,26 @@ class AIPlayer:
         """
         Tìm và trả về tọa độ (hàng, cột) của nước đi tốt nhất.
         Sử dụng Minimax với cắt tỉa Alpha-Beta.
-        Args:
-            time_limit (int): Thời gian tối đa (giây) cho phép AI suy nghĩ.
+        :param board_logic: Đối tượng BoardLogic hiện tại của trò chơi.
+        :param is_first_move: True nếu đây là nước đi đầu tiên của AI.
         Returns:
             tuple: Tọa độ (hàng, cột) của nước đi tốt nhất, hoặc None nếu không tìm thấy.
         """
-        # Nếu là nước đi đầu tiên, đặt ở gần trung tâm để có khởi đầu tốt
+        # Nếu là nước đi đầu tiên, chọn một ô ngẫu nhiên thay vì luôn ở trung tâm.
         if is_first_move:
-            center_r, center_c = board_logic.height // 2, board_logic.width // 2
-            return (center_r, center_c)
+            # Chọn một ô ngẫu nhiên trong khu vực trung tâm của bàn cờ
+            center_row = board_logic.height // 2
+            center_col = board_logic.width // 2
+            # Tạo một danh sách các ô xung quanh trung tâm
+            potential_first_moves = []
+            for r_offset in range(-3, 4): # 5x5 khu vực xung quanh trung tâm
+                for c_offset in range(-3, 4):
+                    r, c = center_row + r_offset, center_col + c_offset
+                    if 0 <= r < board_logic.height and 0 <= c < board_logic.width and board_logic.board[r][c] == '':
+                        potential_first_moves.append((r, c))
+            
+            if potential_first_moves:
+                return random.choice(potential_first_moves)
 
         possible_moves = self._get_possible_moves(board_logic)
         if not possible_moves:
@@ -112,7 +123,7 @@ class AIPlayer:
         # Nếu một số ngẫu nhiên nhỏ hơn tỷ lệ mắc lỗi, AI sẽ chọn một nước đi ngẫu nhiên thay vì nước tốt nhất.
         if random.random() < self.blunder_chance and possible_moves:
             print(f"AI ({self.difficulty}): Oops! Making a random move.")
-            return random.choice(possible_moves)
+            return random.choice(possible_moves) # Trả về một nước đi ngẫu nhiên từ tất cả các nước có thể
         else:
             # Nếu không mắc lỗi, trả về nước đi tốt nhất đã tìm thấy.
             # Nếu không tìm được (ví dụ: hết giờ), trả về nước đi đầu tiên trong danh sách đã sắp xếp.

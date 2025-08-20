@@ -1,4 +1,3 @@
-import pygame
 from handler.PauseHandler import PauseHandler
 
 class GameStateManager:
@@ -30,12 +29,12 @@ class GameStateManager:
         self.pause_handler.toggle(timer)
 
     def handle_event(self, event, timer, board):
-        """Xử lý các sự kiện liên quan đến trạng thái game (ví dụ: click nút tạm dừng)."""
-        # Chỉ xử lý sự kiện tạm dừng khi game chưa kết thúc
-        if not self.game_over and board.player_info_panel.pause_button.handle_event(event):
-            self.toggle_pause(timer)
-            return True # Sự kiện đã được xử lý
-        return False # Sự kiện chưa được xử lý
+        """
+        Xử lý các sự kiện liên quan đến trạng thái game.
+        Phương thức này không còn xử lý sự kiện click nút, vì logic đó đã được
+        chuyển đến GameSession để đảm bảo hoạt động nhất quán.
+        """
+        return False # Luôn trả về False để GameSession có thể xử lý sự kiện.
 
     def draw_overlay(self):
         """Vẽ lớp phủ và chữ khi game tạm dừng (ủy quyền cho PauseHandler)."""

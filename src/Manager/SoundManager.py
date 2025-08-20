@@ -35,26 +35,27 @@ class SoundManager:
             print(f"Lỗi: Không thể khởi tạo pygame.mixer: {e}")
             return
 
+        self.settings_manager = SettingsManager()
+
         self.sounds = {
-            'move_X': self._load_sound('MoveX.mp3', volume=0.7),
-            'move_O': self._load_sound('MoveO.mp3', volume=0.7),
-            'checkbox_click': self._load_sound('CheckBox.mp3', volume=0.6),
-            'game_over': self._load_sound('GameOver.mp3', volume=0.8),
-            'button_click': self._load_sound('ButtonClick.mp3', volume=0.6),
+            'move_X': self._load_sound('MoveX.mp3'),
+            'move_O': self._load_sound('MoveO.mp3'),
+            'checkbox_click': self._load_sound('CheckBox.mp3'),
+            'game_over': self._load_sound('GameOver.mp3'),
+            'button_click': self._load_sound('ButtonClick.mp3'),
         }
 
         # Định nghĩa các bản nhạc khác nhau
         self.music_tracks = {
             'menu': 'BackgroundMusic.mp3', # Nhạc cho menu
-            'game': 'BackgroundMusic.mp3'  # Sử dụng lại nhạc nền cho ván chơi
+            'game': 'InGameMusic.mp3'
         }
 
-        self.settings_manager = SettingsManager()
         # Phát nhạc cho menu ngay khi khởi tạo lần đầu
         self.play_music('menu')
 
 
-    def _load_sound(self, filename, volume=1.0):
+    def _load_sound(self, filename):
         """
         Hàm trợ giúp để tải một file âm thanh từ thư mục 'sfx'.
         Trả về một đối tượng Sound giả nếu không tìm thấy file.
@@ -62,7 +63,8 @@ class SoundManager:
         path = resource_path(os.path.join('sound', filename))
         try:
             sound = pygame.mixer.Sound(path)
-            sound.set_volume(volume)
+            sfx_volume = self.settings_manager.get('sfx_volume')
+            sound.set_volume(sfx_volume)
             return sound
         except pygame.error as e:
             print(f"Lỗi: Không thể tải file âm thanh '{path}'. {e}")
@@ -99,12 +101,25 @@ class SoundManager:
             print(f"Lỗi khi tải hoặc phát nhạc '{track_key}': {e}")
             self._current_music = None
 
+    def pause_music(self):
+        """Tạm dừng bản nhạc đang phát."""
+        if pygame.mixer.get_init():
+            pygame.mixer.music.pause()
+
+    def unpause_music(self):
+        """Tiếp tục bản nhạc đã tạm dừng."""
+        if pygame.mixer.get_init():
+            pygame.mixer.music.unpause()
+
     def play_move(self, player):
         """Phát âm thanh khi đi cờ của người chơi cụ thể (X hoặc O)."""
         self.sounds[f'move_{player}'].play()
 
     def play_game_over(self):
-        """Phát âm thanh khi game kết thúc."""
+        """Dừng nhạc nền và phát âm thanh khi game kết thúc."""
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+            self._current_music = None # Đặt lại để đảm bảo nhạc có thể phát lại sau đó
         self.sounds['game_over'].play()
 
     def play_button_click(self):
@@ -127,3 +142,16 @@ class SoundManager:
             pygame.mixer.music.set_volume(volume)
             if save_setting:
                 self.settings_manager.set('music_volume', volume)
+
+    def set_sfx_volume(self, volume, save_setting=True):
+        """
+        Đặt âm lượng cho tất cả các hiệu ứng âm thanh (SFX).
+        Volume là một số float từ 0.0 đến 1.0.
+        """
+        if pygame.mixer.get_init():
+            # Cập nhật âm lượng cho tất cả các âm thanh đã được tải
+            for sound in self.sounds.values():
+                sound.set_volume(volume)
+            
+            if save_setting:
+                self.settings_manager.set('sfx_volume', volume)

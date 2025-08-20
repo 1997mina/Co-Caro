@@ -40,7 +40,8 @@ class SettingsManager:
         self.defaults = {
             'fullscreen': False,
             'board_size': 20,
-            'music_volume': 0.5  # Âm lượng mặc định 50%
+            'music_volume': 0.5,  # Âm lượng mặc định 50%
+            'sfx_volume': 0.7     # Âm lượng SFX mặc định 70%
         }
         self.settings = self.defaults.copy()
         self.load_settings()

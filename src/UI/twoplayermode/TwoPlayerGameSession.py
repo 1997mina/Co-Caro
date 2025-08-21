@@ -1,7 +1,6 @@
 import pygame
 
 from ui.general.GameSession import GameSession
-from ui.EndGameScreen import show_quit_confirmation_dialog
 from ui.twoplayermode.TwoPlayerSetting import get_two_player_setting
 from ui.twoplayermode.TwoPlayerInfoPanel import TwoPlayerInfoPanel
 

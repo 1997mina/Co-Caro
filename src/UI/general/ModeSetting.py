@@ -1,5 +1,6 @@
 import pygame
 
+from manager.SettingsManager import SettingsManager
 from manager.SoundManager import SoundManager
 from components.Button import Button
 from utils.ResourcePath import resource_path
@@ -37,7 +38,7 @@ class SettingUI:
         button_width = 200
         button_height = 60
         back_button_x = self.screen_width / 2 - 50 - button_width
-        back_button_y = 700
+        back_button_y = screen.get_height() - 100
 
         self.sound_manager = SoundManager()
 
@@ -118,3 +119,16 @@ class SettingUI:
         else:
             title_rect = title_surface.get_rect(center=(screen_width / 2, y_position))
         screen.blit(title_surface, title_rect)
+
+    def load_piece(self, size):
+        # Tải và thay đổi kích thước hình ảnh X và O
+        settings_manager = SettingsManager()
+        piece_shape = settings_manager.get('piece_shape', 'style1') # Lấy style quân cờ từ cài đặt
+
+        # Tải hình ảnh X và O dựa trên style đã chọn
+        x_img = pygame.image.load(resource_path(f'img/pieces/{piece_shape}/X.png')).convert_alpha()
+        o_img = pygame.image.load(resource_path(f'img/pieces/{piece_shape}/O.png')).convert_alpha()
+        x_img = pygame.transform.scale(x_img, (size, size))
+        o_img = pygame.transform.scale(o_img, (size, size))
+
+        return x_img, o_img

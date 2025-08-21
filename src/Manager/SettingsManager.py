@@ -40,8 +40,9 @@ class SettingsManager:
         self.defaults = {
             'fullscreen': False,
             'board_size': 20,
-            'music_volume': 0.5,  # Âm lượng mặc định 50%
-            'sfx_volume': 0.7     # Âm lượng SFX mặc định 70%
+            'music_volume': 0.5, # Âm lượng mặc định 50%
+            'sfx_volume': 0.7, # Âm lượng SFX mặc định 70%
+            'piece_shape': 'style1' # Hình dạng quân cờ mặc định
         }
         self.settings = self.defaults.copy()
         self.load_settings()
@@ -65,9 +66,9 @@ class SettingsManager:
         with open(self.config_file, 'w') as f:
             json.dump(self.settings, f, indent=4)
 
-    def get(self, key):
+    def get(self, key, default_value=None):
         """Lấy một giá trị cài đặt."""
-        return self.settings.get(key, self.defaults.get(key))
+        return self.settings.get(key, self.defaults.get(key, default_value))
 
     def set(self, key, value):
         """Thiết lập một giá trị cài đặt và lưu ngay lập tức."""

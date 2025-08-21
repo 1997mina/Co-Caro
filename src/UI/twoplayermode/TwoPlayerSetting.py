@@ -3,6 +3,7 @@ import pygame
 from manager.CursorManager import CursorManager
 from components.Button import Button
 from components.InputBox import InputBox
+from components.Dropdown import Dropdown
 from ui.general.ModeSetting import SettingUI
 from utils.ResourcePath import resource_path
 
@@ -25,13 +26,6 @@ class TwoPlayerSetting(SettingUI):
     def __init__(self, screen):
         super().__init__(screen)
 
-        # Tải và thay đổi kích thước hình ảnh X và O
-        self.img_size = 50 
-        x_img_raw = pygame.image.load(resource_path('img/general/X.png')).convert_alpha()
-        o_img_raw = pygame.image.load(resource_path('img/general/O.png')).convert_alpha()
-        self.x_img = pygame.transform.scale(x_img_raw, (self.img_size, self.img_size))
-        self.o_img = pygame.transform.scale(o_img_raw, (self.img_size, self.img_size))
-
         # Tải icon hoán đổi
         swap_icon_size = 40
         swap_icon_raw = pygame.image.load(resource_path('img/general/Swap.png')).convert_alpha()
@@ -50,6 +44,8 @@ class TwoPlayerSetting(SettingUI):
                                       self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200))
         
         # --- Cài đặt chọn quân cờ ---
+        self.img_size = 50
+        self.x_img, self.o_img = super().load_piece(self.img_size)
         self.player1_piece = 'X' # Mặc định Người chơi 1 là X
 
         # Vị trí ô hiển thị quân cờ cho mỗi người chơi
@@ -83,26 +79,17 @@ class TwoPlayerSetting(SettingUI):
         self.total_time_button = Button(mode_button_x, self.radio_button_y_start + mode_button_height + 10, mode_button_width, mode_button_height,
                                         self.font_mode.render(self.modes["total_time"]["name"], True, TEXT_COLOR), self.sound_manager,
                                         color=MODE_BUTTON_COLOR_INACTIVE, hover_color=MODE_BUTTON_HOVER, 
-                                        selected_color=BLUE_HOVER, border_radius=10)
-        
-        # --- Các nút chọn người đi trước ---
+                                        selected_color=BLUE_HOVER, border_radius=10)        
+        # --- Dropdown chọn người đi trước ---
         self.first_turn = None # 'player1' hoặc 'player2'
-        
-        turn_button_width, turn_button_height = 200, 50
-        turn_button_y = self.radio_button_y_start + mode_button_height + 10 + mode_button_height + 100 # Tăng khoảng cách
-        turn_button_spacing = 80 # Khoảng cách giữa các nút
-        
-        self.player1_first_button = Button(self.screen_width / 2 - turn_button_width - turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
-                                          self.font_mode.render("Người chơi 1", True, TEXT_COLOR), self.sound_manager,
-                                          color=MODE_BUTTON_COLOR_INACTIVE, hover_color=MODE_BUTTON_HOVER, pressed_color=BLUE_HOVER,
-                                          selected_color=BLUE_HOVER, border_radius=10)
-
-        self.player2_first_button = Button(self.screen_width / 2 + turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
-                                      self.font_mode.render("Người chơi 2", True, TEXT_COLOR), self.sound_manager,
-                                      color=MODE_BUTTON_COLOR_INACTIVE, hover_color=MODE_BUTTON_HOVER, pressed_color=BLUE_HOVER,
-                                      selected_color=BLUE_HOVER, border_radius=10)
-
-        self.turn_buttons = [self.player1_first_button, self.player2_first_button]
+        dropdown_width = 350
+        dropdown_height = 50
+        dropdown_y = self.total_time_button.rect.bottom + 50
+        self.first_turn_dropdown = Dropdown(
+            0, 0, dropdown_width, dropdown_height,
+            ["Người chơi 1", "Người chơi 2"], "Người chơi 1", self.sound_manager,
+            label_text="Người đi trước:", option_hover_color=BLUE_HOVER
+        )
 
 
 
@@ -163,14 +150,15 @@ class TwoPlayerSetting(SettingUI):
                 self.selected_mode = "total_time"
                 self._update_selection_buttons(self.total_time_button, [self.turn_based_button, self.total_time_button])
 
-            # Xử lý sự kiện cho các nút chọn lượt đi đầu
-            if self.player1_first_button.handle_event(event):
-                self.first_turn = 'player1'
-                self._update_selection_buttons(self.player1_first_button, self.turn_buttons)
-            if self.player2_first_button.handle_event(event):
-                self.first_turn = 'player2'
-                self._update_selection_buttons(self.player2_first_button, self.turn_buttons)
+            # Xử lý sự kiện cho dropdown chọn người đi trước
+            if self.first_turn_dropdown.handle_event(event):
+                selected_option = self.first_turn_dropdown.get_selected_option()
+                if selected_option == "Người chơi 1":
+                    self.first_turn = 'player1'
+                elif selected_option == "Người chơi 2":
+                    self.first_turn = 'player2'
 
+            # Xử lý sự kiện cho nút Bắt đầu
             if self.start_button.handle_event(event):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                 # Trả về dữ liệu thô, việc xử lý logic sẽ do GameSession đảm nhiệm
@@ -220,9 +208,9 @@ class TwoPlayerSetting(SettingUI):
         self.total_time_button.draw(self.screen)
 
         # Vẽ lựa chọn người đi trước
-        super()._draw_section_title(self.screen, "Chọn người đi trước:", TEXT_COLOR, self.font_label, self.player1_first_button.rect.y - 30, self.screen_width)
-        self.player1_first_button.draw(self.screen)
-        self.player2_first_button.draw(self.screen)
+        # Tiêu đề được vẽ bởi Dropdown
+        self.first_turn_dropdown.set_center_component(self.screen_width // 2, self.total_time_button.rect.bottom + 100)
+        self.first_turn_dropdown.draw(self.screen)
 
         self.start_button.draw(self.screen)
         self.back_button.draw(self.screen)
@@ -231,9 +219,8 @@ class TwoPlayerSetting(SettingUI):
         self.cursor_manager.add_clickable_area(self.start_button.rect, self.start_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.turn_based_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.total_time_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.player1_first_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.player2_first_button.rect, True)
+        self.cursor_manager.add_clickable_area(self.total_time_button.rect, True)        
+        self.first_turn_dropdown.add_to_cursor_manager(self.cursor_manager)
         self.cursor_manager.add_clickable_area(self.swap_button_rect, True)
         self.cursor_manager.update(mouse_pos)
 

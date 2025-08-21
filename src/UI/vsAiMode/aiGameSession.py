@@ -3,7 +3,6 @@ import threading
 
 from logic.aiLogic import AIPlayer
 from manager.TimerManager import TimerManager
-from ui.EndGameScreen import show_quit_confirmation_dialog
 from ui.general.GameSession import GameSession
 from ui.vsAiMode.vsAiSetting import get_ai_game_settings
 from ui.vsAiMode.vsAiInfoPanel import vsAiInfoPanel

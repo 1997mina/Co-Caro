@@ -1,5 +1,6 @@
 import pygame
 
+from manager.SettingsManager import SettingsManager
 from utils.ResourcePath import resource_path
 
 class GameBoard:
@@ -14,11 +15,24 @@ class GameBoard:
         self.padding = int(self.cell_size * 0.1)
         img_size = self.cell_size - (2 * self.padding)
 
-        # Tải hình ảnh X và O sử dụng resource_path
-        self.x_img = pygame.image.load(resource_path('img/general/X.png')).convert_alpha()
-        self.o_img = pygame.image.load(resource_path('img/general/O.png')).convert_alpha()
-        self.x_img_scaled = pygame.transform.scale(self.x_img, (img_size, img_size))
-        self.o_img_scaled = pygame.transform.scale(self.o_img, (img_size, img_size))
+        # --- Tải hình ảnh quân cờ một cách linh động dựa trên cài đặt ---
+        settings_manager = SettingsManager()
+        piece_shape = settings_manager.get('piece_shape', 'style1') # Mặc định là style1
+
+        try:
+            # Thử tải hình ảnh từ thư mục style đã chọn
+            x_img_path = resource_path(f'img/pieces/{piece_shape}/X.png')
+            o_img_path = resource_path(f'img/pieces/{piece_shape}/O.png')
+            self.x_img = pygame.image.load(x_img_path).convert_alpha()
+            self.o_img = pygame.image.load(o_img_path).convert_alpha()
+        except pygame.error:
+            # Nếu không tìm thấy, sử dụng ảnh mặc định và cảnh báo
+            print(f"Cảnh báo: Không tìm thấy bộ quân cờ '{piece_shape}'. Sử dụng bộ mặc định.")
+            self.x_img = pygame.image.load(resource_path('img/general/X.png')).convert_alpha()
+            self.o_img = pygame.image.load(resource_path('img/general/O.png')).convert_alpha()
+
+        self.x_img_scaled = pygame.transform.smoothscale(self.x_img, (img_size, img_size))
+        self.o_img_scaled = pygame.transform.smoothscale(self.o_img, (img_size, img_size))
 
         # Khởi tạo InfoPanel với chiều rộng cố định được truyền vào
         panel_rect = pygame.Rect(0, 0, panel_width, screen_height)

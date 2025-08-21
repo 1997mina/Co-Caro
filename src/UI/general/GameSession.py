@@ -6,9 +6,9 @@ from manager.SettingsManager import SettingsManager
 from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
-from ui.EndGameScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
+from ui.general.EndGameScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
 from ui.GameBoard import GameBoard
-from ui.GameSettings import show_ingame_settings_dialog
+from ui.general.InGameSettings import InGameSettings
 
 class GameSession:
     """
@@ -141,7 +141,8 @@ class GameSession:
             self.game_state.toggle_pause(self.timer)
 
         # Hiển thị hộp thoại cài đặt
-        show_ingame_settings_dialog(self.screen, self.board_rect)
+        settings_dialog = InGameSettings(self.screen, self.board_rect)
+        settings_dialog.show()
 
         # Sau khi hộp thoại đóng, tiếp tục lại game và nhạc
         if not was_paused_by_user:

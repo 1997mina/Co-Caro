@@ -4,15 +4,18 @@ class Slider:
     """
     Lớp tạo ra một thanh trượt (slider) có thể tương tác trong Pygame.
     """
-    def __init__(self, x, y, w, h, min_val, max_val, initial_val, sound_manager, label_text="", value_suffix=""):
+    def __init__(self, x, y, w, h, min_val, max_val, initial_val, sound_manager, label_text="", value_suffix="",
+                 knob_color=(255, 0, 0), knob_hover_color = (255, 50, 50), track_color=(200, 200, 200), track_fill_color=(60, 180, 80)):
         """
         Khởi tạo Slider.
         :param x, y, w, h: Vị trí và kích thước của thanh trượt (track).
         :param min_val, max_val: Giá trị nhỏ nhất và lớn nhất của slider.
         :param initial_val: Giá trị khởi tạo.
         :param sound_manager: Thể hiện của SoundManager để phát âm thanh.
-        :param label_text: Nhãn hiển thị bên cạnh giá trị.
-        :param value_suffix: Hậu tố hiển thị sau giá trị (ví dụ: "%").
+        :param label_text: (Tùy chọn) Nhãn hiển thị phía trên giá trị.
+        :param value_suffix: (Tùy chọn) Hậu tố hiển thị sau giá trị (ví dụ: "%").
+        :param knob_color: (Tùy chọn) Màu của núm trượt.
+        :param track_color: (Tùy chọn) Màu của thanh trượt.
         """
         self.track_rect = pygame.Rect(x, y, w, h)
         self.min_val = min_val
@@ -33,9 +36,10 @@ class Slider:
         self.dragging = False
 
         # Màu sắc
-        self.track_color = (150, 150, 150)
-        self.knob_color = (255, 0, 0)
-        self.knob_hover_color = (255, 50, 50)
+        self.track_color = track_color
+        self.knob_color = knob_color
+        self.track_fill_color = track_fill_color
+        self.knob_hover_color = knob_hover_color
         self.text_color = (30, 30, 30)
 
         # Font chữ
@@ -104,8 +108,19 @@ class Slider:
 
     def draw(self, screen):
         """Vẽ slider lên màn hình."""
-        # Vẽ thanh trượt
+        # 1. Vẽ toàn bộ thanh trượt với màu nền (phần bên phải/chưa điền)
         pygame.draw.rect(screen, self.track_color, self.track_rect, border_radius=5)
+
+        # 2. Vẽ phần đã điền (bên trái) đè lên trên
+        fill_width = self.knob_rect.centerx - self.track_rect.left
+        if fill_width > 0:
+            fill_rect = pygame.Rect(self.track_rect.left, self.track_rect.top, fill_width, self.track_rect.height)
+            # Xử lý bo góc để trông đẹp mắt
+            # Nếu thanh trượt gần đầy, bo góc cả hai bên
+            if fill_width >= self.track_rect.width - 2: # -2 để xử lý sai số làm tròn
+                pygame.draw.rect(screen, self.track_fill_color, fill_rect, border_radius=5)
+            else: # Nếu không, chỉ bo góc bên trái
+                pygame.draw.rect(screen, self.track_fill_color, fill_rect, border_top_left_radius=5, border_bottom_left_radius=5)
 
         # Vẽ núm trượt
         knob_color = self.knob_hover_color if self.knob_rect.collidepoint(pygame.mouse.get_pos()) or self.dragging else self.knob_color
@@ -114,7 +129,7 @@ class Slider:
         # Vẽ giá trị hiện tại
         value_text = f"{self.label_text}{self.value}{self.value_suffix}"
         text_surf = self.font.render(value_text, True, self.text_color)
-        text_rect = text_surf.get_rect(center=(self.track_rect.centerx, self.track_rect.centery - 55))
+        text_rect = text_surf.get_rect(center=(self.track_rect.centerx, self.track_rect.top - 35))
         screen.blit(text_surf, text_rect)
 
         # Vẽ giá trị min và max ở hai bên

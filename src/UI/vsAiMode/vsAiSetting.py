@@ -6,6 +6,7 @@ from ui.general.ModeSetting import SettingUI
 from components.Button import Button
 from manager.CursorManager import CursorManager
 from components.InputBox import InputBox
+from components.Dropdown import Dropdown
 
 # Hằng số cho màu sắc và font chữ, giữ cho giao diện nhất quán
 WHITE = (255, 255, 255)
@@ -23,10 +24,7 @@ class VsAiSetting(SettingUI):
     def __init__(self, screen):
         super().__init__(screen)
 
-        # Tải và thay đổi kích thước hình ảnh X và O
-        img_size = 80
-        self.x_img = pygame.transform.scale(pygame.image.load(resource_path('img/general/X.png')).convert_alpha(), (img_size, img_size))
-        self.o_img = pygame.transform.scale(pygame.image.load(resource_path('img/general/O.png')).convert_alpha(), (img_size, img_size))
+        self.x_img, self.o_img = super().load_piece(80)
 
         # --- Ô nhập tên người chơi (sử dụng lớp InputBox) ---
         input_box_width = 400 # Giảm chiều rộng để có chỗ cho nút Dán
@@ -48,52 +46,33 @@ class VsAiSetting(SettingUI):
                                self.x_img, self.sound_manager,
                                color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
                                pressed_color=YELLOW_HOVER, selected_color=YELLOW,
-                               border_radius=10)
+                               border_radius=10, shadow_offset=(6, 6))
         
         self.o_button = Button(self.screen_width / 2 + 30, button_y, button_size, button_size,
                                self.o_img, self.sound_manager,
                                color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
                                pressed_color=YELLOW_HOVER, selected_color=YELLOW,
-                               border_radius=10)
+                               border_radius=10, shadow_offset=(6, 6))
 
         self.piece_buttons = [self.x_button, self.o_button]
 
-        # 2. Các nút chọn lượt đi đầu
-        turn_button_width, turn_button_height = 200, 50
-        turn_button_y = 440 # Tăng khoảng cách
-        turn_button_spacing = 70 # Khoảng cách giữa các nút
-        self.player_first_button = Button(self.screen_width / 2 - turn_button_width - turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
-                                          self.font_mode.render("Bạn đi trước", True, TEXT_COLOR), self.sound_manager,
-                                          color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
-                                          selected_color=YELLOW, border_radius=10)
+        # Kích thước Dropdown
+        dropdown_width = 350
+        dropdown_height = 50
 
-        self.ai_first_button = Button(self.screen_width / 2 + turn_button_spacing / 2, turn_button_y, turn_button_width, turn_button_height,
-                                      self.font_mode.render("Máy đi trước", True, TEXT_COLOR), self.sound_manager,
-                                      color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
-                                      selected_color=YELLOW, border_radius=10)
+        # 2. Phần chọn độ khó
+        difficulty_options = ["Dễ", "Trung bình", "Khó"]
+        self.difficulty_dropdown = Dropdown(0, 0, dropdown_width, dropdown_height,
+                                            difficulty_options, "Trung bình", self.sound_manager,
+                                            "Chọn độ khó:", option_hover_color=YELLOW_HOVER)
+        self.difficulty_dropdown.set_center_component(self.screen_width // 2, 440)
 
-        self.turn_buttons = [self.player_first_button, self.ai_first_button]
-
-        # 3. Các nút chọn độ khó
-        difficulty_button_width, difficulty_button_height = 150, 50
-        difficulty_button_y = 570 # Điều chỉnh vị trí Y để phù hợp với thay đổi trên
-        difficulty_spacing = 50 # Khoảng cách giữa các nút độ khó
-        self.easy_button = Button(self.screen_width / 2 - difficulty_button_width * 1.5 - difficulty_spacing, difficulty_button_y, difficulty_button_width, difficulty_button_height,
-                                  self.font_mode.render("Dễ", True, TEXT_COLOR), self.sound_manager,
-                                  color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
-                                  selected_color=YELLOW, border_radius=10)
-
-        self.medium_button = Button(self.screen_width / 2 - difficulty_button_width / 2, difficulty_button_y, difficulty_button_width, difficulty_button_height,
-                                    self.font_mode.render("Trung bình", True, TEXT_COLOR), self.sound_manager,
-                                    color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
-                                    selected_color=YELLOW, border_radius=10)
-
-        self.hard_button = Button(self.screen_width / 2 + difficulty_button_width / 2 + difficulty_spacing, difficulty_button_y, difficulty_button_width, difficulty_button_height,
-                                  self.font_mode.render("Khó", True, TEXT_COLOR), self.sound_manager,
-                                  color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY, pressed_color=YELLOW_HOVER,
-                                  selected_color=YELLOW, border_radius=10)
-        
-        self.difficulty_buttons = [self.easy_button, self.medium_button, self.hard_button]
+        # 3. Dropdown chọn lượt đi đầu
+        first_turn_options = ["Bạn đi trước", "Máy đi trước"]
+        self.first_turn_dropdown = Dropdown(0, 0, dropdown_width, dropdown_height,
+                                            first_turn_options, "Bạn đi trước", self.sound_manager,
+                                            "Người đi trước:", option_hover_color=YELLOW_HOVER)
+        self.first_turn_dropdown.set_center_component(self.screen_width // 2, 570)
 
         # Nút Bắt đầu
         button_width = 200
@@ -126,10 +105,10 @@ class VsAiSetting(SettingUI):
         # Lấy tên người chơi từ InputBox để kiểm tra điều kiện bắt đầu
         player_name = self.player_name_input_box.get_text()
         is_start_enabled = (self.player_piece is not None and 
-                            player_name != "" and 
-                            self.first_turn is not None and 
-                            self.difficulty is not None)
+                            player_name != "" and
+                            self.first_turn is not None) # Bỏ kiểm tra difficulty ở đây vì dropdown luôn có giá trị
         self.start_button.is_enabled = is_start_enabled
+        self.difficulty = self._get_english_difficulty(self.difficulty_dropdown.get_selected_option()) # Lấy giá trị từ dropdown
 
         for event in pygame.event.get():
             mouse_pos = pygame.mouse.get_pos() # Lấy mouse_pos ở đầu vòng lặp sự kiện
@@ -148,25 +127,14 @@ class VsAiSetting(SettingUI):
                 self.player_piece = 'O'
                 self._update_selection_buttons(self.o_button, self.piece_buttons)
 
-            # --- Xử lý sự kiện cho các nút chọn độ khó ---
-            if self.easy_button.handle_event(event):
-                self.difficulty = 'easy'
-                self._update_selection_buttons(self.easy_button, self.difficulty_buttons)
-            if self.medium_button.handle_event(event):
-                self.difficulty = 'medium'
-                self._update_selection_buttons(self.medium_button, self.difficulty_buttons)
-            if self.hard_button.handle_event(event):
-                self.difficulty = 'hard'
-                self._update_selection_buttons(self.hard_button, self.difficulty_buttons)
+            # --- Xử lý sự kiện cho dropdown độ khó ---
+            if self.difficulty_dropdown.handle_event(event):
+                self.difficulty = self._get_english_difficulty(self.difficulty_dropdown.get_selected_option())
 
-            # --- Xử lý sự kiện cho các nút chọn lượt đi đầu ---
-            if self.player_first_button.handle_event(event):
-                self.first_turn = 'player'
-                self._update_selection_buttons(self.player_first_button, self.turn_buttons)
-            if self.ai_first_button.handle_event(event):
-                self.first_turn = 'ai'
-                self._update_selection_buttons(self.ai_first_button, self.turn_buttons)
-
+            # Xử lý sự kiện cho dropdown chọn lượt đi đầu
+            if self.first_turn_dropdown.handle_event(event):
+                self.first_turn = 'player' if self.first_turn_dropdown.get_selected_option() == "Bạn đi trước" else 'ai'
+                
             # Xử lý sự kiện cho các nút Bắt đầu và Quay lại
             if self.start_button.handle_event(event):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -187,21 +155,14 @@ class VsAiSetting(SettingUI):
         super()._draw_section_title(self.screen, "Chọn quân cờ của bạn:", TEXT_COLOR, self.font_label, 190, self.screen_width)
         self.x_button.draw(self.screen)
         self.o_button.draw(self.screen)
-        
-        # Vẽ phần chọn lượt đi
-        super()._draw_section_title(self.screen, "Chọn người đi trước:", TEXT_COLOR, self.font_label, 410, self.screen_width)
-        self.player_first_button.draw(self.screen)
-        self.ai_first_button.draw(self.screen)
-
-        # Vẽ phần chọn độ khó
-        super()._draw_section_title(self.screen, "Chọn độ khó:", TEXT_COLOR, self.font_label, 540, self.screen_width)
-        self.easy_button.draw(self.screen)
-        self.medium_button.draw(self.screen)
-        self.hard_button.draw(self.screen)
 
         # Vẽ các nút Bắt đầu và Quay lại
         self.start_button.draw(self.screen)
         self.back_button.draw(self.screen)
+
+        # Vẽ Dropdown
+        self.first_turn_dropdown.draw(self.screen)
+        self.difficulty_dropdown.draw(self.screen)
 
         # Cập nhật con trỏ chuột cho InputBox
         self.player_name_input_box.handle_mouse_cursor(mouse_pos)
@@ -211,14 +172,20 @@ class VsAiSetting(SettingUI):
         self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.x_button.rect, True)
         self.cursor_manager.add_clickable_area(self.o_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.player_first_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.ai_first_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.easy_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.medium_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.hard_button.rect, True)
+        self.first_turn_dropdown.add_to_cursor_manager(self.cursor_manager)
+        self.difficulty_dropdown.add_to_cursor_manager(self.cursor_manager)
         self.cursor_manager.update(mouse_pos)
 
         pygame.display.flip()
+
+    def _get_english_difficulty(self, difficulty_vn):
+        """Chuyển đổi độ khó tiếng Việt sang tiếng Anh."""
+        if difficulty_vn == 'Dễ':
+            return 'easy'
+        elif difficulty_vn == 'Trung bình':
+            return 'medium'
+        elif difficulty_vn == 'Khó':
+            return 'hard'
 
 def get_ai_game_settings(screen):
     """

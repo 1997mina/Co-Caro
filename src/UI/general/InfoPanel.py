@@ -135,7 +135,6 @@ class InfoPanel:
         screen.blit(name_surf, name_rect)
         y_cursor = name_rect.bottom + 15
 
-
         # 3. Biểu tượng X/O
         icon_img = self.x_img if player_char == 'X' else self.o_img
 
@@ -148,12 +147,11 @@ class InfoPanel:
         watermark_rect = watermark_icon_img.get_rect(center=player_area.center)
         screen.blit(watermark_icon_img, watermark_rect)
 
-
-        y_cursor_bottom = player_area.bottom - 5
+        y_cursor_bottom = player_area.bottom - 20
 
         # 4. Vẽ bộ đếm thời gian
-        # Chỉ vẽ đồng hồ cho chế độ 'total_time' hoặc cho người chơi hiện tại trong chế độ 'turn_based'
-        if time_mode == "total_time" or (time_mode == "turn_based" and is_current_player):
+        # Chỉ vẽ đồng hồ cho các chế độ có giới hạn thời gian ('total_time' hoặc 'turn_based')
+        if time_mode != "no_time" and (time_mode == "total_time" or (time_mode == "turn_based" and is_current_player)):
             timer_color = self.timer_color # Màu mặc định
 
             if player_time == float('inf'):

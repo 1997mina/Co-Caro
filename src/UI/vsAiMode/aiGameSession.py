@@ -54,8 +54,8 @@ class AIGameSession(GameSession):
         # Gọi phương thức khởi tạo của lớp cha
         super()._initialize_components(
             player_names=player_names,
-            time_mode="turn_based",
-            time_limit=25,
+            time_mode="no_time",
+            time_limit=None,
             first_turn_char=first_turn_char,
             info_panel_class=vsAiInfoPanel
         )

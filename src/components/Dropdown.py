@@ -75,46 +75,49 @@ class Dropdown:
 
     def handle_event(self, event):
         changed = False
+        handled = False
         mouse_pos = pygame.mouse.get_pos()
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(mouse_pos):
                 self.is_open = not self.is_open
                 self.sound_manager.play_sfx('button_click')
+                handled = True
             elif self.is_open:
-                clicked_inside_panel = False
-                # Ưu tiên kiểm tra kéo thanh cuộn trước
-                if self.show_scrollbar and self.scrollbar_thumb_rect.collidepoint(mouse_pos):
-                    self.is_dragging_scrollbar = True
-                    self.drag_start_y = mouse_pos[1]
-                    self.drag_start_offset = self.scroll_offset
-                    clicked_inside_panel = True
-                else:
-                    # Kiểm tra click trên các tùy chọn đang hiển thị
-                    visible_options = self.options[self.scroll_offset : self.scroll_offset + self.max_visible_options]
-                    for i, option in enumerate(visible_options):
-                        option_rect = pygame.Rect(self.rect.x, self.rect.bottom + i * self.rect.height, self.rect.width, self.rect.height)
-                        if option_rect.collidepoint(mouse_pos):
-                            if self.selected_option != option:
-                                self.selected_option = option
-                                changed = True
-                            self.is_open = False
-                            self.sound_manager.play_sfx('checkbox_click')
-                            clicked_inside_panel = True
-                            break
-                
-                # Nếu không click vào tùy chọn, kiểm tra click vào rãnh cuộn (để cuộn trang)
-                if not clicked_inside_panel and self.show_scrollbar and self.scrollbar_track_rect.collidepoint(mouse_pos):
-                    if mouse_pos[1] < self.scrollbar_thumb_rect.y: # Click phía trên
-                        self.scroll_offset -= self.max_visible_options
-                    else: # Click phía dưới
-                        self.scroll_offset += self.max_visible_options
-                    self.scroll_offset = max(0, min(self.scroll_offset, len(self.options) - self.max_visible_options))
-                    self._update_scroll_thumb()
-                    clicked_inside_panel = True
+                # Nếu dropdown đang mở, kiểm tra xem click có nằm trong panel không
+                if self.dropdown_panel_rect.collidepoint(mouse_pos):
+                    handled = True # Sự kiện được xử lý bởi dropdown
 
-                # Nếu click ra ngoài toàn bộ danh sách khi đang mở, đóng nó lại
-                if not clicked_inside_panel:
+                    # 1. Kiểm tra kéo thanh cuộn
+                    if self.show_scrollbar and self.scrollbar_thumb_rect.collidepoint(mouse_pos):
+                        self.is_dragging_scrollbar = True
+                        self.drag_start_y = mouse_pos[1]
+                        self.drag_start_offset = self.scroll_offset
+                    else:
+                        # 2. Kiểm tra click trên các tùy chọn
+                        option_clicked = False
+                        visible_options = self.options[self.scroll_offset : self.scroll_offset + self.max_visible_options]
+                        for i, option in enumerate(visible_options):
+                            option_rect = pygame.Rect(self.rect.x, self.rect.bottom + i * self.rect.height, self.rect.width, self.rect.height)
+                            if option_rect.collidepoint(mouse_pos):
+                                if self.selected_option != option:
+                                    self.selected_option = option
+                                    changed = True
+                                self.is_open = False
+                                self.sound_manager.play_sfx('dropdown_click')
+                                option_clicked = True
+                                break
+                        
+                        # 3. Nếu không click vào tùy chọn, kiểm tra click vào rãnh cuộn (để cuộn trang)
+                        if not option_clicked and self.show_scrollbar and self.scrollbar_track_rect.collidepoint(mouse_pos):
+                            if mouse_pos[1] < self.scrollbar_thumb_rect.y: # Click phía trên
+                                self.scroll_offset -= self.max_visible_options
+                            else: # Click phía dưới
+                                self.scroll_offset += self.max_visible_options
+                            self.scroll_offset = max(0, min(self.scroll_offset, len(self.options) - self.max_visible_options))
+                            self._update_scroll_thumb()
+                else:
+                    # Click ra ngoài panel, đóng nó lại
                     self.is_open = False
         
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -137,7 +140,8 @@ class Dropdown:
             # Giới hạn giá trị của scroll_offset
             self.scroll_offset = max(0, min(self.scroll_offset, len(self.options) - self.max_visible_options))
             self._update_scroll_thumb()
-        return changed
+            handled = True
+        return changed, handled
 
     def draw(self, screen):
         # Vẽ nhãn

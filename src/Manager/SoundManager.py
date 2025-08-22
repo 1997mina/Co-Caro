@@ -40,7 +40,7 @@ class SoundManager:
         self.sounds = {
             'move_X': self._load_sound('MoveX.mp3'),
             'move_O': self._load_sound('MoveO.mp3'),
-            'checkbox_click': self._load_sound('CheckBox.mp3'),
+            'dropdown_click': self._load_sound('CheckBox.mp3'),
             'game_over': self._load_sound('GameOver.mp3'),
             'button_click': self._load_sound('ButtonClick.mp3'),
         }

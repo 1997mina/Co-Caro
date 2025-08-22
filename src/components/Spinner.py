@@ -11,11 +11,26 @@ class Spinner:
     Một thành phần UI cho phép người dùng chọn một số bằng cách nhấp vào mũi tên lên/xuống.
     Bao gồm một nhãn, một hộp hiển thị giá trị và các nút lên/xuống.
     """
-    def __init__(self, x, y, width, height, min_val, max_val, initial_val, sound_manager, label_text=""):
-        self.min_val = min_val
-        self.max_val = max_val
-        self.value = initial_val
+    def __init__(self, x, y, width, height, min_val, max_val, initial_val, sound_manager, label_text="", options_list=None, value_suffix="", label_suffix=""):
         self.sound_manager = sound_manager
+        self.value_suffix = value_suffix
+        self.label_suffix = label_suffix
+        self.options_list = options_list
+
+        if self.options_list:
+            self.mode = 'list'
+            try:
+                # Ở chế độ list, 'value' lưu chỉ số (index)
+                self.value = self.options_list.index(initial_val)
+            except ValueError:
+                self.value = 0 # Mặc định là mục đầu tiên nếu không tìm thấy
+            self.min_val = 0
+            self.max_val = len(self.options_list) - 1
+        else:
+            self.mode = 'numeric'
+            self.value = initial_val
+            self.min_val = min_val
+            self.max_val = max_val
         
         # Fonts
         self.font_value = pygame.font.SysFont("Times New Roman", 30)
@@ -24,6 +39,9 @@ class Spinner:
         # Nhãn
         self.label_text = label_text
         self.label_surf = self.font_label.render(self.label_text, True, TEXT_COLOR)
+        
+        # Nhãn hậu tố (mới)
+        self.label_suffix_surf = self.font_label.render(self.label_suffix, True, TEXT_COLOR) if self.label_suffix else None
         
         # Các hình chữ nhật chính của component
         self.spinner_box_rect = pygame.Rect(x, y, width, height)
@@ -37,6 +55,10 @@ class Spinner:
         self.hover_down = False
 
     def get_value(self):
+        """Trả về giá trị hiện tại. Là một số nếu ở chế độ numeric, hoặc một chuỗi nếu ở chế độ list."""
+        if self.mode == 'list':
+            # Đảm bảo chỉ số nằm trong giới hạn hợp lệ
+            return self.options_list[self.value]
         return self.value
 
     def handle_event(self, event):
@@ -48,12 +70,12 @@ class Spinner:
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.hover_up:
-                if self.value < self.max_val:
+                if self.value < self.max_val: # Logic này giờ dùng chung cho cả 2 chế độ
                     self.value += 1
                     self.sound_manager.play_sfx('button_click')
                     changed = True
             elif self.hover_down:
-                if self.value > self.min_val:
+                if self.value > self.min_val: # Logic này giờ dùng chung cho cả 2 chế độ
                     self.value -= 1
                     self.sound_manager.play_sfx('button_click')
                     changed = True
@@ -68,7 +90,13 @@ class Spinner:
         pygame.draw.rect(screen, BG_COLOR, self.value_display_rect, border_top_left_radius=8, border_bottom_left_radius=8)
         
         # Vẽ văn bản giá trị
-        value_surf = self.font_value.render(str(self.value), True, TEXT_COLOR)
+        if self.mode == 'list':
+            display_text = str(self.options_list[self.value])
+        else:
+            display_text = str(self.value)
+        
+        full_display_text = display_text + self.value_suffix
+        value_surf = self.font_value.render(full_display_text, True, TEXT_COLOR)
         value_text_rect = value_surf.get_rect(center=self.value_display_rect.center)
         screen.blit(value_surf, value_text_rect)
 
@@ -87,6 +115,11 @@ class Spinner:
         # Vẽ đường phân cách
         pygame.draw.line(screen, BORDER_COLOR, self.up_button_rect.topleft, self.down_button_rect.bottomleft, 2)
 
+        # Vẽ nhãn hậu tố (mới)
+        if self.label_suffix_surf:
+            suffix_rect = self.label_suffix_surf.get_rect(midleft=(self.spinner_box_rect.right + 20, self.spinner_box_rect.centery))
+            screen.blit(self.label_suffix_surf, suffix_rect)
+
     def add_to_cursor_manager(self, cursor_manager):
         cursor_manager.add_clickable_area(self.up_button_rect)
         cursor_manager.add_clickable_area(self.down_button_rect)
@@ -94,6 +127,9 @@ class Spinner:
     def set_center_component(self, center_x, center_y):
         # Phương thức này căn giữa toàn bộ component (nhãn + hộp spinner)
         total_width = self.label_surf.get_width() + 20 + self.spinner_box_rect.width
+        if self.label_suffix_surf:
+            total_width += 20 + self.label_suffix_surf.get_width()
+
         start_x = center_x - total_width / 2
         
         spinner_box_x = start_x + self.label_surf.get_width() + 20

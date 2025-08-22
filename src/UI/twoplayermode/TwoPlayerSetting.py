@@ -3,8 +3,9 @@ import pygame
 from manager.CursorManager import CursorManager
 from components.Button import Button
 from components.InputBox import InputBox
+from components.Spinner import Spinner
 from components.Dropdown import Dropdown
-from ui.general.ModeSetting import SettingUI
+from ui.settings.ModeSetting import SettingUI
 from utils.ResourcePath import resource_path
 
 # Hằng số cho màu sắc và font chữ
@@ -55,43 +56,66 @@ class TwoPlayerSetting(SettingUI):
         # Vị trí nút hoán đổi
         swap_button_x = self.player1_piece_rect.right + 15
         swap_button_y = (self.player1_piece_rect.centery + self.player2_piece_rect.centery) / 2 - self.swap_icon_img.get_height() / 2
-        self.swap_button_rect = self.swap_icon_img.get_rect(topleft=(swap_button_x, swap_button_y))
+        self.swap_button = Button(
+            swap_button_x, swap_button_y, self.swap_icon_img.get_width(), self.swap_icon_img.get_height(),
+            self.swap_icon_img, self.sound_manager,
+            color=(240, 240, 240), hover_color=(200, 200, 200), pressed_color=(180, 180, 180),
+            border_radius=5
+        )
 
-        # Các chế độ chơi
-        self.modes = {
-            "turn_based": {"name": "20 giây mỗi lượt", "time_limit": 20},
-            "total_time": {"name": "2 phút tổng cộng", "time_limit": 120}
-        }
-        self.selected_mode = None # Chế độ mặc định
-
-        # --- Các nút chọn chế độ (Radio button) ---
-        self.radio_button_y_start = 325
-        self.radio_button_spacing = 40
-        
-        mode_button_width, mode_button_height = 350, 50
-        mode_button_x = self.screen_width / 2 - mode_button_width / 2
-
-        self.turn_based_button = Button(mode_button_x, self.radio_button_y_start, mode_button_width, mode_button_height,
-                                        self.font_mode.render(self.modes["turn_based"]["name"], True, TEXT_COLOR), self.sound_manager,
-                                        color=MODE_BUTTON_COLOR_INACTIVE, hover_color=MODE_BUTTON_HOVER, 
-                                        selected_color=BLUE_HOVER, border_radius=10)
-        
-        self.total_time_button = Button(mode_button_x, self.radio_button_y_start + mode_button_height + 10, mode_button_width, mode_button_height,
-                                        self.font_mode.render(self.modes["total_time"]["name"], True, TEXT_COLOR), self.sound_manager,
-                                        color=MODE_BUTTON_COLOR_INACTIVE, hover_color=MODE_BUTTON_HOVER, 
-                                        selected_color=BLUE_HOVER, border_radius=10)        
         # --- Dropdown chọn người đi trước ---
-        self.first_turn = None # 'player1' hoặc 'player2'
+        self.first_turn = 'player1' # 'player1' hoặc 'player2'
         dropdown_width = 350
         dropdown_height = 50
-        dropdown_y = self.total_time_button.rect.bottom + 50
         self.first_turn_dropdown = Dropdown(
             0, 0, dropdown_width, dropdown_height,
             ["Người chơi 1", "Người chơi 2"], "Người chơi 1", self.sound_manager,
             label_text="Người đi trước:", option_hover_color=BLUE_HOVER
         )
+        self.first_turn_dropdown.set_center_component(self.screen_width // 2, 325)
 
+        # --- Dropdown chọn chế độ thời gian ---
+        self.time_mode_options = {
+            "Theo lượt": "turn_based",
+            "Tổng thời gian": "total_time",
+            "Không giới hạn": "no_time"
+        }
+        self.selected_mode = "no_time" # Chế độ mặc định
+        self.time_mode_dropdown = Dropdown(
+            0, 0, dropdown_width, dropdown_height,
+            list(self.time_mode_options.keys()), "Không giới hạn", self.sound_manager,
+            label_text="Chế độ thời gian:", option_hover_color=BLUE_HOVER
+        )
+        self.time_mode_dropdown.set_center_component(self.screen_width // 2, self.first_turn_dropdown.rect.bottom + 120)
 
+        # --- Spinner để tùy chỉnh thời gian ---
+        spinner_y = self.time_mode_dropdown.rect.bottom + 100
+        spinner_width = 150
+        spinner_height = 50
+
+        # Spinner cho chế độ theo lượt (giây)
+        self.turn_time_options = [5, 10, 15, 20, 25, 30, 40]
+        self.turn_time_spinner = Spinner(0, 0, spinner_width, spinner_height,
+                                         min_val=None, max_val=None, # Không dùng cho chế độ list
+                                         initial_val=20,
+                                         sound_manager=self.sound_manager,
+                                         label_text="Thời gian mỗi lượt:",
+                                         options_list=self.turn_time_options,
+                                         label_suffix="giây")
+        self.turn_time_spinner.set_center_component(self.screen_width // 2, spinner_y)
+
+        # Spinner cho chế độ tổng thời gian với các giá trị tùy chỉnh
+        self.total_time_map = {
+            "0:30": 30, "1:00": 60, "2:00": 120, 
+            "3:00": 180, "5:00": 300, "10:00": 600
+        }
+        self.total_time_spinner = Spinner(0, 0, spinner_width, spinner_height,
+                                          min_val=None, max_val=None, # Không dùng cho chế độ list
+                                          initial_val="2:00", 
+                                          sound_manager=self.sound_manager, 
+                                          label_text="Thời gian tổng cộng:",
+                                          options_list=list(self.total_time_map.keys()))
+        self.total_time_spinner.set_center_component(self.screen_width // 2, spinner_y)
 
         # Nút Bắt đầu
         button_width = 200
@@ -107,10 +131,6 @@ class TwoPlayerSetting(SettingUI):
         )
         self.cursor_manager = CursorManager()
 
-    def _update_selection_buttons(self, selected_button, button_group):
-        """Cập nhật trạng thái is_selected cho một nhóm các nút."""
-        for button in button_group:
-            button.is_selected = (button == selected_button)
 
     def run(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -120,10 +140,7 @@ class TwoPlayerSetting(SettingUI):
 
         # Điều kiện để kích hoạt nút "Bắt đầu"
         is_start_enabled = (self.player1_name.strip() and
-                            self.player2_name.strip() and
-                            self.player1_piece is not None and # Luôn có giá trị mặc định
-                            self.first_turn is not None and
-                            self.selected_mode is not None) # Chỉ cần người chơi 1 chọn
+                            self.player2_name.strip())
         self.start_button.is_enabled = is_start_enabled
 
         for event in pygame.event.get():
@@ -135,39 +152,51 @@ class TwoPlayerSetting(SettingUI):
             self.input_box1_ui.handle_event(event)
             self.input_box2_ui.handle_event(event)
 
-            # Xử lý sự kiện cho các nút chọn quân cờ
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Xử lý cho nút hoán đổi
-                if self.swap_button_rect.collidepoint(event.pos):
-                    self.player1_piece = 'O' if self.player1_piece == 'X' else 'X'
-                    self.sound_manager.play_button_click()
+            # Xử lý sự kiện cho nút hoán đổi
+            if self.swap_button.handle_event(event):
+                self.player1_piece = 'O' if self.player1_piece == 'X' else 'X'
 
-            if self.turn_based_button.handle_event(event):
-                self.selected_mode = "turn_based"
-                self._update_selection_buttons(self.turn_based_button, [self.turn_based_button, self.total_time_button])
+            # Xử lý sự kiện cho dropdown chọn chế độ thời gian
+            changed, handled = self.time_mode_dropdown.handle_event(event)
+            if changed:
+                selected_mode_text = self.time_mode_dropdown.get_selected_option()
+                self.selected_mode = self.time_mode_options[selected_mode_text]
+            if handled:
+                continue
             
-            if self.total_time_button.handle_event(event):
-                self.selected_mode = "total_time"
-                self._update_selection_buttons(self.total_time_button, [self.turn_based_button, self.total_time_button])
+            if self.selected_mode == 'turn_based':
+                self.turn_time_spinner.handle_event(event)
+            elif self.selected_mode == 'total_time':
+                self.total_time_spinner.handle_event(event)
 
-            # Xử lý sự kiện cho dropdown chọn người đi trước
-            if self.first_turn_dropdown.handle_event(event):
+            changed, handled = self.first_turn_dropdown.handle_event(event)
+            if changed:
                 selected_option = self.first_turn_dropdown.get_selected_option()
                 if selected_option == "Người chơi 1":
                     self.first_turn = 'player1'
                 elif selected_option == "Người chơi 2":
                     self.first_turn = 'player2'
+            if handled:
+                continue
 
             # Xử lý sự kiện cho nút Bắt đầu
             if self.start_button.handle_event(event):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-                # Trả về dữ liệu thô, việc xử lý logic sẽ do GameSession đảm nhiệm
+                
+                # Xác định giới hạn thời gian dựa trên chế độ và giá trị spinner
+                time_limit = None
+                if self.selected_mode == 'turn_based':
+                    time_limit = self.turn_time_spinner.get_value()
+                elif self.selected_mode == 'total_time':
+                    selected_time_str = self.total_time_spinner.get_value()
+                    time_limit = self.total_time_map[selected_time_str]
+
                 return (
                     self.player1_name.strip(), 
                     self.player2_name.strip(), 
                     self.player1_piece, # Quân cờ của người chơi 1
                     self.selected_mode, 
-                    self.modes[self.selected_mode]["time_limit"], 
+                    time_limit,
                     self.first_turn # 'player1' hoặc 'player2'
                 )
             
@@ -200,28 +229,34 @@ class TwoPlayerSetting(SettingUI):
         self.screen.blit(p2_img, self.player2_piece_rect)
         
         # Vẽ nút hoán đổi
-        self.screen.blit(self.swap_icon_img, self.swap_button_rect)
-            
-        # Vẽ lựa chọn chế độ chơi
-        super()._draw_section_title(self.screen, "Chọn chế độ thời gian:", TEXT_COLOR, self.font_label, self.radio_button_y_start - 30, self.screen_width)
-        self.turn_based_button.draw(self.screen)
-        self.total_time_button.draw(self.screen)
+        self.swap_button.draw(self.screen)
 
-        # Vẽ lựa chọn người đi trước
-        # Tiêu đề được vẽ bởi Dropdown
-        self.first_turn_dropdown.set_center_component(self.screen_width // 2, self.total_time_button.rect.bottom + 100)
-        self.first_turn_dropdown.draw(self.screen)
+        # Vẽ spinner tương ứng với chế độ đã chọn
+        if self.selected_mode == 'turn_based':
+            self.turn_time_spinner.draw(self.screen)
+        elif self.selected_mode == 'total_time':
+            self.total_time_spinner.draw(self.screen)
 
         self.start_button.draw(self.screen)
         self.back_button.draw(self.screen)
 
+        # Vẽ lựa chọn người đi trước
+        self.first_turn_dropdown.draw(self.screen)
+
+        # Vẽ dropdown chọn chế độ thời gian
+        self.time_mode_dropdown.draw(self.screen)
+
         # Cập nhật con trỏ chuột
         self.cursor_manager.add_clickable_area(self.start_button.rect, self.start_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
-        self.cursor_manager.add_clickable_area(self.turn_based_button.rect, True)
-        self.cursor_manager.add_clickable_area(self.total_time_button.rect, True)        
-        self.first_turn_dropdown.add_to_cursor_manager(self.cursor_manager)
-        self.cursor_manager.add_clickable_area(self.swap_button_rect, True)
+        self.time_mode_dropdown.add_to_cursor_manager(self.cursor_manager)
+        
+        if self.selected_mode == 'turn_based':
+            self.turn_time_spinner.add_to_cursor_manager(self.cursor_manager)
+        elif self.selected_mode == 'total_time':
+            self.total_time_spinner.add_to_cursor_manager(self.cursor_manager)
+        self.first_turn_dropdown.add_to_cursor_manager(self.cursor_manager) # Thêm dropdown vào cursor manager
+        self.cursor_manager.add_clickable_area(self.swap_button.rect, True) # Thêm nút hoán đổi vào cursor manager
         self.cursor_manager.update(mouse_pos)
 
         pygame.display.flip()

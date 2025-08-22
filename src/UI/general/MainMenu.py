@@ -5,7 +5,7 @@ from manager.CursorManager import CursorManager
 from utils.ResourcePath import resource_path
 from components.Button import Button
 from manager.SoundManager import SoundManager
-from ui.MainSettings import show_settings_screen
+from ui.settings.MainSettings import show_settings_screen
 
 # Hằng số cho màu sắc và font chữ
 TEXT_COLOR = (30, 30, 30)

@@ -110,7 +110,7 @@ def show_settings_screen(screen):
     board_size_dropdown = Dropdown(0, 0, dropdown_width, dropdown_height,
                                    board_size_options, initial_board_size_option, sound_manager,
                                    "Kích thước bàn cờ:", option_hover_color=GREEN_HOVER) # Thêm độ trong suốt
-    board_size_dropdown.set_center_component(screen_width // 2 + 100, screen_height // 4 - 50)
+    board_size_dropdown.set_center_component(screen_width // 2, screen_height // 4 - 50)
 
     # Slider cho âm lượng nhạc nền
     slider_width = 500
@@ -198,10 +198,13 @@ def show_settings_screen(screen):
                 pygame.quit()
                 sys.exit()
             # Xử lý sự kiện cho dropdown và cập nhật giá trị tạm thời
-            if board_size_dropdown.handle_event(event):
+            changed, handled = board_size_dropdown.handle_event(event)
+            if changed:
                 selected_str = board_size_dropdown.get_selected_option()
                 # Lấy số từ chuỗi "15x15" -> 15
                 temp_board_size = int(selected_str.split('x')[0])
+            if handled:
+                continue
 
             # Xử lý sự kiện cho slider âm lượng
             if music_volume_slider.handle_event(event):

@@ -14,7 +14,7 @@ class TimerManager:
         """
         self.ai_player = ai_player
         self.mode = mode
-        if mode is None:
+        if mode == "no_time" or mode is None:
             # Chế độ không giới hạn thời gian
             self.turn_time_limit = float('inf')
             self.total_times = {'X': float('inf'), 'O': float('inf')}

@@ -35,8 +35,8 @@ class VsAiSetting(SettingUI):
 
         # --- Trạng thái và các thành phần UI ---
         self.player_piece = None  # 'X' hoặc 'O'
-        self.first_turn = None # 'player' hoặc 'ai'
-        self.difficulty = None # 'easy', 'medium', 'hard'
+        self.first_turn = 'player' # 'player' hoặc 'ai', mặc định là người chơi đi trước
+        self.difficulty = 'medium' # 'easy', 'medium', 'hard'
 
         # 1. Các nút chọn quân cờ
         button_size = 120
@@ -46,13 +46,13 @@ class VsAiSetting(SettingUI):
                                self.x_img, self.sound_manager,
                                color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
                                pressed_color=YELLOW_HOVER, selected_color=YELLOW,
-                               border_radius=10, shadow_offset=(6, 6))
+                               border_radius=10, shadow_offset=(5, 5))
         
         self.o_button = Button(self.screen_width / 2 + 30, button_y, button_size, button_size,
                                self.o_img, self.sound_manager,
                                color=SUPER_LIGHT_GRAY, hover_color=LIGHT_GRAY,
                                pressed_color=YELLOW_HOVER, selected_color=YELLOW,
-                               border_radius=10, shadow_offset=(6, 6))
+                               border_radius=10, shadow_offset=(5, 5))
 
         self.piece_buttons = [self.x_button, self.o_button]
 
@@ -105,8 +105,7 @@ class VsAiSetting(SettingUI):
         # Lấy tên người chơi từ InputBox để kiểm tra điều kiện bắt đầu
         player_name = self.player_name_input_box.get_text()
         is_start_enabled = (self.player_piece is not None and 
-                            player_name != "" and
-                            self.first_turn is not None) # Bỏ kiểm tra difficulty ở đây vì dropdown luôn có giá trị
+                            player_name.strip() != "") # Các dropdown đã có giá trị mặc định
         self.start_button.is_enabled = is_start_enabled
         self.difficulty = self._get_english_difficulty(self.difficulty_dropdown.get_selected_option()) # Lấy giá trị từ dropdown
 
@@ -128,13 +127,19 @@ class VsAiSetting(SettingUI):
                 self._update_selection_buttons(self.o_button, self.piece_buttons)
 
             # --- Xử lý sự kiện cho dropdown độ khó ---
-            if self.difficulty_dropdown.handle_event(event):
+            changed, handled = self.difficulty_dropdown.handle_event(event)
+            if changed:
                 self.difficulty = self._get_english_difficulty(self.difficulty_dropdown.get_selected_option())
+            if handled:
+                continue
 
             # Xử lý sự kiện cho dropdown chọn lượt đi đầu
-            if self.first_turn_dropdown.handle_event(event):
+            changed, handled = self.first_turn_dropdown.handle_event(event)
+            if changed:
                 self.first_turn = 'player' if self.first_turn_dropdown.get_selected_option() == "Bạn đi trước" else 'ai'
-                
+            if handled:
+                continue
+
             # Xử lý sự kiện cho các nút Bắt đầu và Quay lại
             if self.start_button.handle_event(event):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)

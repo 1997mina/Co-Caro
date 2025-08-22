@@ -17,9 +17,9 @@ class TwoPlayerInfoPanel(InfoPanel):
     def _get_vietnamese_time_mode(self, time_mode_en):
         """Chuyển đổi chế độ thời gian tiếng Anh sang tiếng Việt."""
         if time_mode_en == 'turn_based':
-            return '20 giây Theo lượt'
+            return 'Theo lượt'
         elif time_mode_en == 'total_time':
-            return '2 phút Tổng cộng'
+            return 'Tổng thời gian'
         elif time_mode_en == 'no_time':
             return 'Không giới hạn'
         return time_mode_en

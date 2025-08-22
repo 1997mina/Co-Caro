@@ -135,6 +135,10 @@ class TwoPlayerSetting(SettingUI):
     def run(self):
         mouse_pos = pygame.mouse.get_pos()
     
+        # Cập nhật trạng thái cho các ô nhập liệu (quan trọng cho con trỏ nhấp nháy)
+        self.input_box1_ui.update()
+        self.input_box2_ui.update()
+
         self.player1_name = self.input_box1_ui.get_text()
         self.player2_name = self.input_box2_ui.get_text()
 
@@ -247,6 +251,10 @@ class TwoPlayerSetting(SettingUI):
         self.time_mode_dropdown.draw(self.screen)
 
         # Cập nhật con trỏ chuột
+        # Thêm các ô nhập liệu vào trình quản lý con trỏ để có con trỏ IBEAM
+        self.cursor_manager.add_text_input(self.input_box1_ui)
+        self.cursor_manager.add_text_input(self.input_box2_ui)
+
         self.cursor_manager.add_clickable_area(self.start_button.rect, self.start_button.is_enabled)
         self.cursor_manager.add_clickable_area(self.back_button.rect, self.back_button.is_enabled)
         self.time_mode_dropdown.add_to_cursor_manager(self.cursor_manager)

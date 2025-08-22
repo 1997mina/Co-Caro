@@ -7,8 +7,8 @@ from manager.CursorManager import CursorManager
 from manager.SoundManager import SoundManager
 from manager.TimerManager import TimerManager
 from ui.general.EndGameScreen import show_end_screen, show_quit_confirmation_dialog, show_final_victory_screen
-from ui.GameBoard import GameBoard
-from ui.general.InGameSettings import InGameSettings
+from ui.general.GameBoard import GameBoard
+from ui.settings.InGameSettings import InGameSettings
 
 class GameSession:
     """
@@ -80,7 +80,7 @@ class GameSession:
         
         self.sound_manager = SoundManager()
         self.cursor_manager = CursorManager()
-        self.game_state = GameStateManager(self.screen, self.board_rect, self.sound_manager)
+        self.game_state = GameStateManager()
         
         # Lớp con có thể cần truyền thêm tham số (ví dụ: ai_player)
         self._initialize_timer()

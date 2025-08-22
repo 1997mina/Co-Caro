@@ -2,7 +2,7 @@ import pygame
 import sys
 
 from ui.vsAiMode.aiGameSession import AIGameSession
-from ui.MainMenu import show_main_menu
+from ui.general.MainMenu import show_main_menu
 from ui.twoplayermode.TwoPlayerGameSession import TwoPlayerGameSession
 
 if __name__ == '__main__':

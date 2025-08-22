@@ -1,32 +1,31 @@
-from handler.PauseHandler import PauseHandler
-
 class GameStateManager:
     """
     Quản lý các trạng thái chính của game như: đang chạy, tạm dừng, kết thúc.
-    Sử dụng một PauseHandler để quản lý logic tạm dừng.
     """
-    def __init__(self, screen, board_rect, sound_manager):
+    def __init__(self):
         self.game_over = False
-        # Khởi tạo trình xử lý tạm dừng, ủy quyền các tác vụ liên quan cho nó
-        self.pause_handler = PauseHandler(screen, board_rect)
-        self.sound_manager = sound_manager
+        self.paused = False
 
     def is_playing(self):
         """Kiểm tra xem game có đang trong trạng thái chơi được không."""
         # Game đang chơi khi không tạm dừng và chưa kết thúc
-        return not self.pause_handler.is_paused() and not self.game_over
+        return not self.paused and not self.game_over
 
     def is_paused(self):
-        """Kiểm tra xem game có đang tạm dừng không (ủy quyền cho PauseHandler)."""
-        return self.pause_handler.is_paused()
+        """Kiểm tra xem game có đang tạm dừng không."""
+        return self.paused
 
     def set_game_over(self, status):
         """Đặt trạng thái kết thúc game."""
         self.game_over = status
 
     def toggle_pause(self, timer):
-        """Bật/tắt trạng thái tạm dừng (ủy quyền cho PauseHandler)."""
-        self.pause_handler.toggle(timer)
+        """Bật/tắt trạng thái tạm dừng và điều khiển bộ đếm thời gian."""
+        self.paused = not self.paused
+        if self.paused:
+            timer.pause()
+        else:
+            timer.resume()
 
     def handle_event(self, event, timer, board):
         """
@@ -37,10 +36,10 @@ class GameStateManager:
         return False # Luôn trả về False để GameSession có thể xử lý sự kiện.
 
     def draw_overlay(self):
-        """Vẽ lớp phủ và chữ khi game tạm dừng (ủy quyền cho PauseHandler)."""
-        self.pause_handler.draw()
+        """Vẽ lớp phủ khi game tạm dừng. Hiện tại chức năng này không hoạt động."""
+        pass
 
     def reset(self):
         """Thiết lập lại trạng thái để bắt đầu ván mới."""
         self.game_over = False
-        self.pause_handler.reset()
+        self.paused = False

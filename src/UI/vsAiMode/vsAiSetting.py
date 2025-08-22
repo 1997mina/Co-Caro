@@ -2,7 +2,7 @@ import pygame
 import sys
 
 from utils.ResourcePath import resource_path
-from ui.general.ModeSetting import SettingUI
+from ui.settings.ModeSetting import SettingUI
 from components.Button import Button
 from manager.CursorManager import CursorManager
 from components.InputBox import InputBox

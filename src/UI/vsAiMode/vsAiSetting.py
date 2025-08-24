@@ -27,10 +27,10 @@ class VsAiSetting(SettingUI):
         self.x_img, self.o_img = super().load_piece(80)
 
         # --- Ô nhập tên người chơi (sử dụng lớp InputBox) ---
-        input_box_width = 400 # Giảm chiều rộng để có chỗ cho nút Dán
+        input_box_width = 600
         self.player_name_input_box = InputBox(
             self.screen_width / 2 - input_box_width / 2, 80, input_box_width, 50,
-            self.font_label, TEXT_COLOR, DARK_GRAY, DARK_WHITE
+            self.font_label, TEXT_COLOR, DARK_GRAY, DARK_WHITE, max_chars=25
         )
 
         # --- Trạng thái và các thành phần UI ---
@@ -168,6 +168,8 @@ class VsAiSetting(SettingUI):
         # Vẽ Dropdown
         self.first_turn_dropdown.draw(self.screen)
         self.difficulty_dropdown.draw(self.screen)
+
+        self.cursor_manager.add_text_input(self.player_name_input_box)
 
         # Cập nhật con trỏ chuột cho InputBox
         self.player_name_input_box.handle_mouse_cursor(mouse_pos)

@@ -75,34 +75,6 @@ class SettingUI:
         text_rect = text_surface.get_rect(center=rect.center)
         screen.blit(text_surface, text_rect)
 
-    def draw_radio_button(self, screen, center_x, center_y, radius, is_selected, text, font, text_color, selected_color):
-        """
-        Vẽ một nút radio.
-        """
-        # Vẽ vòng tròn ngoài
-        pygame.draw.circle(screen, text_color, (center_x, center_y), radius, 2)
-    
-        # Nếu được chọn, vẽ vòng tròn bên trong
-        if is_selected:
-            pygame.draw.circle(screen, selected_color, (center_x, center_y), radius - 4)
-    
-        # Vẽ văn bản
-        text_x_offset = radius + 10
-        text_surface = font.render(text, True, text_color)
-        screen.blit(text_surface, (center_x + text_x_offset, center_y - text_surface.get_height() / 2))
-
-    def _draw_dashed_rect(self, surface, color, rect, dash_length=5, gap_length=5):
-        """Vẽ một hình chữ nhật với đường viền đứt nét."""
-        x, y, w, h = rect
-        # Trên và dưới
-        for i in range(x, x + w, dash_length + gap_length):
-            pygame.draw.line(surface, color, (i, y), (min(i + dash_length, x + w), y), 2)
-            pygame.draw.line(surface, color, (i, y + h), (min(i + dash_length, x + w), y + h), 2)
-        # Trái và phải
-        for i in range(y, y + h, dash_length + gap_length):
-            pygame.draw.line(surface, color, (x, i), (x, min(i + dash_length, y + h)), 2)
-            pygame.draw.line(surface, color, (x + w, i), (x + w, min(i + dash_length, y + h)), 2)
-
     def _draw_section_title(self, screen, text, text_color, font, y_position, screen_width, align_left_of_box=None, align_right_of_box=None, align_right_offset=15, y_override=None):
         """
         Vẽ tiêu đề cho một phần cài đặt.

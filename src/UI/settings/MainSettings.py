@@ -84,6 +84,19 @@ def show_settings_screen(screen):
     # Tải hình nền
     background_img = _load_and_scale_background(screen_width, screen_height)
 
+    # Tải audioicons cho sliders
+    try:
+        music_icon_orig = pygame.image.load(resource_path('img/audioicons/MusicIcon.png')).convert_alpha()
+        sfx_icon_orig = pygame.image.load(resource_path('img/audioicons/SoundWave.png')).convert_alpha()
+        # Co dãn icon về kích thước phù hợp
+        icon_size = (60, 60)
+        music_icon = pygame.transform.smoothscale(music_icon_orig, icon_size)
+        sfx_icon = pygame.transform.smoothscale(sfx_icon_orig, icon_size)
+    except pygame.error:
+        print("Cảnh báo: Không thể tải icon cho slider. Sẽ không hiển thị icon.")
+        music_icon = None
+        sfx_icon = None
+
     # Khởi tạo SettingsManager để đọc/ghi cài đặt
     settings_manager = SettingsManager()
 
@@ -113,26 +126,26 @@ def show_settings_screen(screen):
     board_size_dropdown.set_center_component(screen_width // 2, screen_height // 4 - 50)
 
     # Slider cho âm lượng nhạc nền
-    slider_width = 500
+    slider_width = 400 # Giảm chiều rộng để có không gian cho icon và text
     slider_height = 20
     music_volume_slider = Slider(0, 0, slider_width, slider_height,
                                  0, 100, int(original_music_volume * 100), sound_manager,
-                                 "Âm lượng nhạc nền: ", value_suffix="%",
+                                 label_text="Âm lượng nhạc nền", icon_surface=music_icon, value_suffix="%",
                                  knob_color=GREEN, knob_hover_color=GREEN_HOVER,
                                  track_color=MEDIUM_GRAY, track_fill_color=GREEN)
-    music_volume_slider.set_center_component(screen_width // 2, board_size_dropdown.rect.bottom + 110)
+    music_volume_slider.set_center_component(screen_width // 2, board_size_dropdown.rect.bottom + 120)
 
     # Slider cho âm lượng hiệu ứng âm thanh
     sfx_volume_slider = Slider(0, 0, slider_width, slider_height,
                                0, 100, int(original_sfx_volume * 100), sound_manager,
-                               "Âm lượng hiệu ứng: ", value_suffix="%",
+                               label_text="Âm lượng hiệu ứng", icon_surface=sfx_icon, value_suffix="%",
                                knob_color=GREEN, knob_hover_color=GREEN_HOVER,
                                track_color=MEDIUM_GRAY, track_fill_color=GREEN)
-    sfx_volume_slider.set_center_component(screen_width // 2, music_volume_slider.track_rect.bottom + 80)
+    sfx_volume_slider.set_center_component(screen_width // 2, music_volume_slider.track_rect.bottom + 90)
 
     # --- Lựa chọn hình dạng quân cờ ---
     font_label = pygame.font.SysFont("Times New Roman", 35)
-    piece_shape_title_surf = font_label.render("Chọn hình dạng quân cờ:", True, TEXT_COLOR)
+    piece_shape_title_surf = font_label.render("Giao diện quân cờ:", True, TEXT_COLOR)
     piece_shape_title_rect = piece_shape_title_surf.get_rect(center=(screen_width // 2, sfx_volume_slider.track_rect.bottom + 80))
 
     # Các nút chọn - kích thước mới để chứa 2 quân cờ

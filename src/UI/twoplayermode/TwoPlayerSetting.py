@@ -39,10 +39,10 @@ class TwoPlayerSetting(SettingUI):
 
         self.input_box1_ui = InputBox(self.input_box1.x, self.input_box1.y
                                       , self.input_box1.width, self.input_box1.height, 
-                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200))
+                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=25)
         self.input_box2_ui = InputBox(self.input_box2.x, self.input_box2.y, 
                                       self.input_box2.width, self.input_box2.height, 
-                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200))
+                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=25)
         
         # --- Cài đặt chọn quân cờ ---
         self.img_size = 50
@@ -251,7 +251,6 @@ class TwoPlayerSetting(SettingUI):
         self.time_mode_dropdown.draw(self.screen)
 
         # Cập nhật con trỏ chuột
-        # Thêm các ô nhập liệu vào trình quản lý con trỏ để có con trỏ IBEAM
         self.cursor_manager.add_text_input(self.input_box1_ui)
         self.cursor_manager.add_text_input(self.input_box2_ui)
 

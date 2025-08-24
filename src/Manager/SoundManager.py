@@ -116,11 +116,13 @@ class SoundManager:
         self.sounds[f'move_{player}'].play()
 
     def play_game_over(self):
-        """Dừng nhạc nền và phát âm thanh khi game kết thúc."""
+        """
+        Dừng nhạc nền và phát âm thanh khi game kết thúc.
+        """
         if pygame.mixer.get_init():
             pygame.mixer.music.stop()
             self._current_music = None # Đặt lại để đảm bảo nhạc có thể phát lại sau đó
-        self.sounds['game_over'].play()
+        return self.sounds['game_over'].play()
 
     def play_button_click(self):
         """Phát âm thanh khi nhấn nút."""

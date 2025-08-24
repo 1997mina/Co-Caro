@@ -39,20 +39,19 @@ class AIPlayer:
     def set_difficulty(self, difficulty):
         """Đặt độ khó cho AI."""
         self.difficulty = difficulty
-        self.SEARCH_DEPTH = 1 # Giữ nguyên độ sâu tìm kiếm là 1 cho mọi cấp độ
 
         if difficulty == 'easy':
-            self.MAX_MOVES_TO_CONSIDER = 8  # Chỉ xét 8 nước đi tiềm năng nhất
-            self.blunder_chance = 0.35      # 35% cơ hội mắc lỗi (chọn nước ngẫu nhiên)
+            self.SEARCH_DEPTH = 1
+            self.blunder_chance = 0.5
         elif difficulty == 'medium':
-            self.MAX_MOVES_TO_CONSIDER = 15 # Xét 15 nước
-            self.blunder_chance = 0.10      # 10% cơ hội mắc lỗi
+            self.SEARCH_DEPTH = 1
+            self.blunder_chance = 0
         elif difficulty == 'hard':
-            self.MAX_MOVES_TO_CONSIDER = 30 # Xét 30 nước
-            self.blunder_chance = 0         # 0% cơ hội mắc lỗi, luôn chọn nước tốt nhất
+            self.SEARCH_DEPTH = 2
+            self.blunder_chance = 0
 
     def find_best_move(self, board_logic, is_first_move=False):
-        """
+        """ 
         Tìm và trả về tọa độ (hàng, cột) của nước đi tốt nhất.
         Sử dụng Minimax với cắt tỉa Alpha-Beta.
         :param board_logic: Đối tượng BoardLogic hiện tại của trò chơi.
@@ -94,7 +93,7 @@ class AIPlayer:
         # 2. Sắp xếp các nước đi từ tốt nhất đến tệ nhất dựa trên điểm sơ bộ
         scored_moves.sort(key=lambda x: x[0], reverse=True)
         # Giới hạn số lượng nước đi cần xem xét để tối ưu hóa
-        sorted_moves = [move for score, move in scored_moves][:self.MAX_MOVES_TO_CONSIDER]
+        sorted_moves = [move for score, move in scored_moves]
         # ----------------------------------------------------
 
         best_score = -float('inf')

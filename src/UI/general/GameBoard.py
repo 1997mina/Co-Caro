@@ -110,5 +110,3 @@ class GameBoard:
             for r, c in winning_cells:
                 highlight_rect = pygame.Rect(self.rect.x + c * self.cell_size, self.rect.y + r * self.cell_size, self.cell_size, self.cell_size)
                 screen.blit(highlight_surface, highlight_rect.topleft)
-
-            pygame.time.wait(1000) # Tạm dừng 1 giây trước khi hiển thị màn hình kết thúc

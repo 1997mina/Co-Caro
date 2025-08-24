@@ -7,7 +7,7 @@ class InputBox:
     Một lớp đóng gói toàn bộ logic cho một ô nhập liệu văn bản.
     Bao gồm xử lý sự kiện, vẽ, và hiệu ứng con trỏ nhấp nháy.
     """
-    def __init__(self, x, y, w, h, font, text_color, active_color, inactive_color, initial_text=''):
+    def __init__(self, x, y, w, h, font, text_color, active_color, inactive_color, initial_text='', max_chars=None):
         """
         Khởi tạo một ô nhập liệu.
         :param x, y, w, h: Vị trí và kích thước của ô.
@@ -16,6 +16,7 @@ class InputBox:
         :param active_color: Màu viền khi ô được chọn.
         :param inactive_color: Màu viền khi ô không được chọn.
         :param initial_text: Văn bản ban đầu.
+        :param max_chars: Số lượng ký tự tối đa. None có nghĩa là không giới hạn.
         """
         self.rect = pygame.Rect(x, y, w, h)
         self.font = font
@@ -25,6 +26,7 @@ class InputBox:
         
         self.text = initial_text
         self.active = False
+        self.max_chars = max_chars
 
         self.cursor_visible = True # Khởi tạo thuộc tính cursor_visible
         # Thuộc tính cho con trỏ nhấp nháy
@@ -33,14 +35,6 @@ class InputBox:
 
         if not pygame.scrap.get_init():
             pygame.scrap.init()
-
-    def _create_paste_button(self, sound_manager):
-        """Tạo nút Dán."""
-        self.paste_button = Button(self.paste_button_rect.x, self.paste_button_rect.y, self.paste_button_rect.width, self.paste_button_rect.height,
-                                   self.paste_font.render("Dán", True, self.paste_button_text_color), sound_manager,
-                                   color=self.paste_button_color, hover_color=self.paste_button_hover_color, pressed_color=self.paste_button_pressed_color,
-                                   border_radius=5)
-        self.paste_button.is_enabled = False # Mặc định vô hiệu hóa (nút Dán)
 
     def handle_event(self, event):
         """
@@ -72,14 +66,22 @@ class InputBox:
                 elif event.key == pygame.K_v and (event.mod & pygame.KMOD_CTRL or event.mod & pygame.KMOD_GUI):
                     self._paste_from_clipboard()
                 else:
-                    self.text += event.unicode
+                    # Chỉ thêm ký tự nếu chưa đạt giới hạn
+                    if self.max_chars is None or len(self.text) < self.max_chars:
+                        self.text += event.unicode
 
     def _paste_from_clipboard(self):
         try:
             clipboard_content = pygame.scrap.get(pygame.SCRAP_TEXT)
             if clipboard_content:
                 pasted_text = clipboard_content.decode('utf-8').strip('\x00') # Loại bỏ ký tự null
-                self.text += pasted_text
+                if self.max_chars is not None:
+                    # Tính toán không gian còn lại và cắt bớt văn bản dán nếu cần
+                    remaining_space = self.max_chars - len(self.text)
+                    if remaining_space > 0:
+                        self.text += pasted_text[:remaining_space]
+                else:
+                    self.text += pasted_text
         except (pygame.error, UnicodeDecodeError) as e:
             print(f"Không thể dán văn bản từ clipboard: {e}")
             

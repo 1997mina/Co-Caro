@@ -4,7 +4,7 @@ class Slider:
     """
     Lớp tạo ra một thanh trượt (slider) có thể tương tác trong Pygame.
     """
-    def __init__(self, x, y, w, h, min_val, max_val, initial_val, sound_manager, label_text="", value_suffix="",
+    def __init__(self, x, y, w, h, min_val, max_val, initial_val, sound_manager, label_text="", icon_surface=None, value_suffix="",
                  knob_color=(255, 0, 0), knob_hover_color = (255, 50, 50), track_color=(200, 200, 200), track_fill_color=(60, 180, 80)):
         """
         Khởi tạo Slider.
@@ -12,7 +12,8 @@ class Slider:
         :param min_val, max_val: Giá trị nhỏ nhất và lớn nhất của slider.
         :param initial_val: Giá trị khởi tạo.
         :param sound_manager: Thể hiện của SoundManager để phát âm thanh.
-        :param label_text: (Tùy chọn) Nhãn hiển thị phía trên giá trị.
+        :param label_text: (Tùy chọn) Nhãn hiển thị phía trên slider.
+        :param icon_surface: (Tùy chọn) pygame.Surface của icon để hiển thị bên trái slider.
         :param value_suffix: (Tùy chọn) Hậu tố hiển thị sau giá trị (ví dụ: "%").
         :param knob_color: (Tùy chọn) Màu của núm trượt.
         :param track_color: (Tùy chọn) Màu của thanh trượt.
@@ -23,8 +24,9 @@ class Slider:
         self.value = initial_val
         self.sound_manager = sound_manager
         self.label_text = label_text
+        self.icon_surface = icon_surface
         self.value_suffix = value_suffix
-        self.text_padding = 35 # Khoảng cách từ lề slider đến text min/max
+        self.component_padding = 30 # Khoảng cách giữa icon/value và slider
 
         # Thuộc tính của núm trượt (knob)
         self.knob_radius = h + 4 # Bán kính của núm trượt
@@ -43,16 +45,8 @@ class Slider:
         self.text_color = (30, 30, 30)
 
         # Font chữ
-        self.font = pygame.font.SysFont("Times New Roman", 30)
-        self.min_max_font = pygame.font.SysFont("Times New Roman", 25) # Font nhỏ hơn cho min/max
-
-        # Tạo surface cho văn bản min/max để tối ưu hóa
-        self.min_text_surf = self.min_max_font.render(str(self.min_val), True, self.text_color) # Render min text
-        self.max_text_surf = self.min_max_font.render(str(self.max_val), True, self.text_color) # Render max text
-
-        # Tính toán vị trí cho văn bản min/max
-        self.min_text_rect = self.min_text_surf.get_rect(midright=(self.track_rect.left - self.text_padding, self.track_rect.centery))
-        self.max_text_rect = self.max_text_surf.get_rect(midleft=(self.track_rect.right + self.text_padding, self.track_rect.centery))
+        self.font = pygame.font.SysFont("Times New Roman", 35)
+        self.label_font = pygame.font.SysFont("Times New Roman", 32)
 
     def _calculate_knob_pos_from_value(self):
         """Tính toán vị trí x của núm trượt dựa trên giá trị hiện tại."""
@@ -108,10 +102,21 @@ class Slider:
 
     def draw(self, screen):
         """Vẽ slider lên màn hình."""
-        # 1. Vẽ toàn bộ thanh trượt với màu nền (phần bên phải/chưa điền)
+        # 1. Vẽ nhãn ở trên (nếu có)
+        if self.label_text:
+            label_surf = self.label_font.render(self.label_text, True, self.text_color)
+            label_rect = label_surf.get_rect(center=(self.track_rect.centerx, self.track_rect.top - 40))
+            screen.blit(label_surf, label_rect)
+
+        # 2. Vẽ icon bên trái (nếu có)
+        if self.icon_surface:
+            icon_rect = self.icon_surface.get_rect(midright=(self.track_rect.left - self.component_padding, self.track_rect.centery))
+            screen.blit(self.icon_surface, icon_rect)
+
+        # 3. Vẽ toàn bộ thanh trượt với màu nền (phần bên phải/chưa điền)
         pygame.draw.rect(screen, self.track_color, self.track_rect, border_radius=5)
 
-        # 2. Vẽ phần đã điền (bên trái) đè lên trên
+        # 4. Vẽ phần đã điền (bên trái) đè lên trên
         fill_width = self.knob_rect.centerx - self.track_rect.left
         if fill_width > 0:
             fill_rect = pygame.Rect(self.track_rect.left, self.track_rect.top, fill_width, self.track_rect.height)
@@ -122,19 +127,15 @@ class Slider:
             else: # Nếu không, chỉ bo góc bên trái
                 pygame.draw.rect(screen, self.track_fill_color, fill_rect, border_top_left_radius=5, border_bottom_left_radius=5)
 
-        # Vẽ núm trượt
+        # 5. Vẽ núm trượt
         knob_color = self.knob_hover_color if self.knob_rect.collidepoint(pygame.mouse.get_pos()) or self.dragging else self.knob_color
         pygame.draw.circle(screen, knob_color, self.knob_rect.center, self.knob_radius)
 
-        # Vẽ giá trị hiện tại
-        value_text = f"{self.label_text}{self.value}{self.value_suffix}"
+        # 6. Vẽ giá trị hiện tại ở bên phải
+        value_text = f"{self.value}{self.value_suffix}"
         text_surf = self.font.render(value_text, True, self.text_color)
-        text_rect = text_surf.get_rect(center=(self.track_rect.centerx, self.track_rect.top - 35))
+        text_rect = text_surf.get_rect(midleft=(self.track_rect.right + self.component_padding, self.track_rect.centery))
         screen.blit(text_surf, text_rect)
-
-        # Vẽ giá trị min và max ở hai bên
-        screen.blit(self.min_text_surf, self.min_text_rect) # Draw min text
-        screen.blit(self.max_text_surf, self.max_text_rect) # Draw max text
 
 
     def get_value(self):
@@ -149,7 +150,7 @@ class Slider:
 
     def set_center_component(self, center_x, center_y):
         """
-        Căn giữa toàn bộ component (thanh trượt + nhãn) vào một điểm cho trước.
+        Căn giữa thanh trượt vào một điểm cho trước. Icon, nhãn và giá trị sẽ được định vị tương đối.
         :param center_x: Tọa độ x của điểm trung tâm.
         :param center_y: Tọa độ y của điểm trung tâm.
         """
@@ -158,7 +159,3 @@ class Slider:
 
         # Cập nhật lại vị trí của núm trượt dựa trên giá trị hiện tại
         self.knob_rect.center = (self._calculate_knob_pos_from_value(), self.track_rect.centery)
-
-        # Cập nhật lại vị trí của nhãn min/max để chúng di chuyển cùng thanh trượt
-        self.min_text_rect.midright = (self.track_rect.left - self.text_padding, self.track_rect.centery) # Update min text position
-        self.max_text_rect.midleft = (self.track_rect.right + self.text_padding, self.track_rect.centery) # Update max text position

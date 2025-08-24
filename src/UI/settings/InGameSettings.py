@@ -5,6 +5,7 @@ from manager.SoundManager import SoundManager
 from manager.SettingsManager import SettingsManager
 from components.Slider import Slider
 from manager.CursorManager import CursorManager
+from utils.ResourcePath import resource_path
 
 # Hằng số
 WHITE = (255, 255, 255)
@@ -36,31 +37,43 @@ class InGameSettings:
         dialog_height = 350
         self.dialog_rect = pygame.Rect(0, 0, dialog_width, dialog_height)
         self.dialog_rect.center = self.board_rect.center
-        self.dialog_bg_color = (230, 230, 230)
+        self.dialog_bg_color = WHITE
         self.dialog_border_color = (100, 100, 100)
 
         # --- Tiêu đề ---
-        font_title = pygame.font.SysFont("Times New Roman", 48, bold=True)
+        font_title = pygame.font.SysFont("Times New Roman", 45, bold=True)
         self.title_surf = font_title.render("Cài đặt Âm thanh", True, TITLE_COLOR)
         self.title_rect = self.title_surf.get_rect(centerx=self.dialog_rect.centerx, top=self.dialog_rect.top + 15)
 
+        # --- Tải audioicons ---
+        try:
+            music_icon_orig = pygame.image.load(resource_path('img/audioicons/MusicIcon.png')).convert_alpha()
+            sfx_icon_orig = pygame.image.load(resource_path('img/audioicons/SoundWave.png')).convert_alpha()
+            icon_size = (60, 60)
+            music_icon = pygame.transform.smoothscale(music_icon_orig, icon_size)
+            sfx_icon = pygame.transform.smoothscale(sfx_icon_orig, icon_size)
+        except pygame.error:
+            print("Cảnh báo: Không thể tải icon cho slider. Sẽ không hiển thị icon.")
+            music_icon = None
+            sfx_icon = None
+
         # --- Thanh trượt ---
-        slider_width = 450
+        slider_width = 350 # Giảm chiều rộng để có không gian cho icon và text
         slider_height = 20
         original_music_volume = self.settings_manager.get('music_volume')
         original_sfx_volume = self.settings_manager.get('sfx_volume')
 
         self.music_volume_slider = Slider(0, 0, slider_width, slider_height,
                                      0, 100, int(original_music_volume * 100), self.sound_manager,
-                                     "Âm lượng nhạc nền: ", value_suffix="%",
+                                     label_text="Âm lượng nhạc nền", icon_surface=music_icon, value_suffix="%",
                                      track_fill_color=FILL_COLOR)
         self.music_volume_slider.set_center_component(self.dialog_rect.centerx, self.dialog_rect.centery - 30)
 
         self.sfx_volume_slider = Slider(0, 0, slider_width, slider_height,
                                    0, 100, int(original_sfx_volume * 100), self.sound_manager,
-                                   "Âm lượng hiệu ứng: ", value_suffix="%",
+                                   label_text="Âm lượng hiệu ứng", icon_surface=sfx_icon, value_suffix="%",
                                    track_fill_color=FILL_COLOR)
-        self.sfx_volume_slider.set_center_component(self.dialog_rect.centerx, self.dialog_rect.centery + 80)
+        self.sfx_volume_slider.set_center_component(self.dialog_rect.centerx, self.dialog_rect.centery + 60)
 
         # --- Nút Đóng ---
         close_button_width = 180

@@ -37,6 +37,7 @@ class GameSession:
         self.winner = None
         self.winning_cells = []
         self.last_move = None
+        self.game_over_sound_channel = None
 
     def _initialize_components(self, player_names, time_mode, time_limit, first_turn_char, info_panel_class, board_size=None):
         """
@@ -89,6 +90,7 @@ class GameSession:
         self.winner = None
         self.winning_cells = []
         self.last_move = None
+        self.game_over_sound_channel = None
 
     def _start_new_round_music(self):
         """Phát hoặc phát lại nhạc nền cho ván chơi."""
@@ -170,8 +172,9 @@ class GameSession:
         """Kiểm tra nếu hết giờ và xử lý."""
         if self.game_state.is_playing() and self.timer.is_time_up():
             self.game_state.set_game_over(True)
+            self.timer.pause() # Dừng bộ đếm thời gian
             self.winner = 'O' if self.current_player == 'X' else 'X'
-            self.sound_manager.play_game_over()
+            self.game_over_sound_channel = self.sound_manager.play_game_over()
             if len(self.match_history) < 5:
                 self.match_history.append(self.winner)
 
@@ -227,6 +230,10 @@ class GameSession:
         if not self.game_state.game_over:
             return
 
+        # Chờ cho âm thanh game over kết thúc trước khi hiển thị màn hình
+        if self.game_over_sound_channel and self.game_over_sound_channel.get_busy():
+            return # Âm thanh vẫn đang phát, đợi ở frame tiếp theo
+
         winner_display_name = "Hòa" if self.winner == "Draw" else self.player_names.get(self.winner, "Unknown")
 
         # --- KIỂM TRA NGƯỜI THẮNG CHUNG CUỘC ---
@@ -258,6 +265,7 @@ class GameSession:
         self.winner = None
         self.last_move = None
         self.winning_cells = []
+        self.game_over_sound_channel = None
         self._initialize_timer()
         self._start_new_round_music()
 
@@ -273,13 +281,16 @@ class GameSession:
         if winning_line:
             self.winner = self.current_player
             self.game_state.set_game_over(True)
-            self.sound_manager.play_game_over()
+            self.timer.pause() # Dừng bộ đếm thời gian
+            self.game_over_sound_channel = self.sound_manager.play_game_over()
             self.winning_cells = winning_line
             if len(self.match_history) < 5:
                 self.match_history.append(self.winner)
         elif self.game_logic.is_board_full(self.board.board):
             self.winner = "Draw"
             self.game_state.set_game_over(True)
+            self.timer.pause() # Dừng bộ đếm thời gian
+            self.game_over_sound_channel = self.sound_manager.play_game_over()
         else:
             # Đổi lượt chơi
             self.current_player = 'O' if self.current_player == 'X' else 'X'

@@ -53,7 +53,7 @@ def show_end_screen(screen, winner_name, board_rect, match_history, x_img, o_img
     Hiển thị màn hình kết thúc game với tên người thắng và các nút lựa chọn.
     Trả về True nếu người dùng muốn chơi lại, False nếu muốn thoát.
     """
-    font_title = pygame.font.SysFont("Times New Roman", 74, bold=True)
+    font_title = pygame.font.SysFont("Times New Roman", 50, bold=True)
     font_score = pygame.font.SysFont("Times New Roman", 42, bold=True)
     font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)
 
@@ -113,7 +113,7 @@ def show_end_screen(screen, winner_name, board_rect, match_history, x_img, o_img
         score_display_height = 50 # Based on icon size in _draw_score_display
 
         # Calculate required size for the dialog box
-        box_width = play_again_button.rect.width + 2 * padding_x
+        box_width = max(text_surf.get_width(), play_again_button.rect.width) + 2 * padding_x
         box_height = (padding_y + 
                       text_surf.get_height() + gap + 
                       score_display_height + gap + 
@@ -159,7 +159,7 @@ def show_final_victory_screen(screen, final_winner_name, board_rect, match_histo
     """
     Hiển thị màn hình chiến thắng chung cuộc.
     """
-    font_title = pygame.font.SysFont("Times New Roman", 80, bold=True)
+    font_title = pygame.font.SysFont("Times New Roman", 50, bold=True)
     font_score = pygame.font.SysFont("Times New Roman", 42, bold=True)
     font_subtitle = pygame.font.SysFont("Times New Roman", 40, italic=True)
     font_button = pygame.font.SysFont("Times New Roman", 40, bold=True)

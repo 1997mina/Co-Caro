@@ -27,10 +27,10 @@ class VsAiSetting(SettingUI):
         self.x_img, self.o_img = super().load_piece(80)
 
         # --- Ô nhập tên người chơi (sử dụng lớp InputBox) ---
-        input_box_width = 600
+        input_box_width = 300
         self.player_name_input_box = InputBox(
             self.screen_width / 2 - input_box_width / 2, 80, input_box_width, 50,
-            self.font_label, TEXT_COLOR, DARK_GRAY, DARK_WHITE, max_chars=25
+            self.input_font, TEXT_COLOR, DARK_GRAY, DARK_WHITE, max_chars=15
         )
 
         # --- Trạng thái và các thành phần UI ---

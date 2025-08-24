@@ -29,6 +29,16 @@ class SettingUI:
         self.font_placeholder = pygame.font.SysFont("Times New Roman", 24, italic=True)
         self.font_mode = pygame.font.SysFont("Times New Roman", 28) # Font for radio buttons
 
+        # Tải font hỗ trợ đa ngôn ngữ cho ô nhập liệu
+        try:
+            # Giả sử bạn đã tải font NotoSans-Regular.ttf và đặt vào thư mục assets/font
+            font_path = resource_path('fonts/NotoSans-Regular.ttf')
+            self.input_font = pygame.font.Font(font_path, 28)
+        except pygame.error:
+            # Nếu không tìm thấy font, dùng font hệ thống thay thế
+            print("Cảnh báo: Không tìm thấy font đa ngôn ngữ, sử dụng font mặc định.")
+            self.input_font = pygame.font.SysFont("Times New Roman", 28)
+
         # Tải hình nền
         self.background_img = pygame.image.load(resource_path('img/general/Background.jpg')).convert()
         self.background_img = pygame.transform.scale(self.background_img, (self.screen_width, self.screen_height))

@@ -1,6 +1,5 @@
 import pygame
-
-from components.Button import Button
+import platform
 
 class InputBox:
     """
@@ -74,7 +73,10 @@ class InputBox:
         try:
             clipboard_content = pygame.scrap.get(pygame.SCRAP_TEXT)
             if clipboard_content:
-                pasted_text = clipboard_content.decode('utf-8').strip('\x00') # Loại bỏ ký tự null
+                # Trên Windows, pygame.scrap trả về text dưới dạng mã hóa hệ thống (mbcs).
+                # Trên các hệ thống khác, nó thường là utf-8.
+                encoding = 'mbcs' if platform.system() == 'Windows' else 'utf-8'
+                pasted_text = clipboard_content.decode(encoding).strip('\x00') # Loại bỏ ký tự null
                 if self.max_chars is not None:
                     # Tính toán không gian còn lại và cắt bớt văn bản dán nếu cần
                     remaining_space = self.max_chars - len(self.text)

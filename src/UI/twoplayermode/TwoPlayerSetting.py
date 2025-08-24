@@ -33,16 +33,16 @@ class TwoPlayerSetting(SettingUI):
         self.swap_icon_img = pygame.transform.scale(swap_icon_raw, (swap_icon_size, swap_icon_size))
 
         # Các ô nhập liệu và nhãn
-        input_box_width = 500
+        input_box_width = 300
         self.input_box1 = pygame.Rect((self.screen_width - input_box_width) / 2, 105, input_box_width, 50)
         self.input_box2 = pygame.Rect((self.screen_width - input_box_width) / 2, 175, input_box_width, 50)
 
         self.input_box1_ui = InputBox(self.input_box1.x, self.input_box1.y
                                       , self.input_box1.width, self.input_box1.height, 
-                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=25)
+                                      self.input_font, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=15)
         self.input_box2_ui = InputBox(self.input_box2.x, self.input_box2.y, 
                                       self.input_box2.width, self.input_box2.height, 
-                                      self.font_label, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=25)
+                                      self.input_font, TEXT_COLOR, (100, 100, 100), (200, 200, 200), max_chars=15)
         
         # --- Cài đặt chọn quân cờ ---
         self.img_size = 50
